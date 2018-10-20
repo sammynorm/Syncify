@@ -2,8 +2,14 @@ package sammynorm.syncify.Model;
 
 public class User {
 
+    String uid;
+    String username;
+    String songPlaying;
+    boolean songState;
+    double songTime;
 
-    public User(String uid, String username, String songPlaying, int songState, double songTime) {
+
+    public User(String uid, String username, String songPlaying, boolean songState, double songTime) {
         this.uid = uid;
         this.username = username;
         this.songPlaying = songPlaying;
@@ -35,11 +41,11 @@ public class User {
         this.songPlaying = songPlaying;
     }
 
-    public int getSongState() {
+    public boolean getSongState() {
         return songState;
     }
 
-    public void setSongState(int songState) {
+    public void setSongState(boolean songState) {
         this.songState = songState;
     }
 
@@ -50,12 +56,6 @@ public class User {
     public void setSongTime(double songTime) {
         this.songTime = songTime;
     }
-
-    String uid;
-    String username;
-    String songPlaying;
-    int songState;
-    double songTime;
 
 
 }

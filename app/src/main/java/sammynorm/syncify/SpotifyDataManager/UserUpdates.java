@@ -1,9 +1,9 @@
 package sammynorm.syncify.SpotifyDataManager;
 
+import android.content.Context;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.util.Log;
-
-
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,27 +19,25 @@ import sammynorm.syncify.Model.FireBaseUtil;
 
 import static android.content.ContentValues.TAG;
 
-public class DataManager {
+public class UserUpdates {
     private final OkHttpClient mOkHttpClient = new OkHttpClient();
     private Call mCall;
+    public String id;
 
-
-    public void checkUserExists(String mAccessToken)
-    {
-        if(mAccessToken == null) {
-            Log.d(TAG,"Empty token");
+    public void checkUserExists(String mAccessToken, Context context) {
+        if (mAccessToken == null) {
+            Log.d(TAG, "Empty token");
         }
 
         final Request request = new Request.Builder()
                 .url("https://api.spotify.com/v1/me")
-                .addHeader("Authorization","Bearer " + mAccessToken)
+                .addHeader("Authorization", "Bearer " + mAccessToken)
                 .build();
 
         cancelCall();
         mCall = mOkHttpClient.newCall(request);
-        final FireBaseUtil fbUtil = new FireBaseUtil();
 
-        mCall.enqueue(new Callback(){
+        mCall.enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 Log.d(TAG, "Failed to fetch data: " + e);
@@ -48,14 +46,35 @@ public class DataManager {
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 try {
-
                     final JSONObject jsonObject = new JSONObject(response.body().string());
-                    FireBaseUtil.doesUserExist(jsonObject.getString("id"), jsonObject.getString("display_name" ));
+                    setId(jsonObject.getString("id"));
+
+
+                    FireBaseUtil.doesUserExist(jsonObject.getString("id"), jsonObject.getString("display_name"));
                 } catch (JSONException e) {
-                    Log.d(TAG, "Failed to parse data: " + e);
+                    e.printStackTrace();
                 }
             }
         });
+        setSubscriberOn(context);
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+
+    private void setSubscriberOn(final Context context) {
+        //Delay So that DB isn't locked from other method
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            public void run() {
+                PlayerUpdates playerUpdates = new PlayerUpdates();
+                playerUpdates.subscribeToPlayer(id, context);
+            }
+        }, 5000);
+
+
     }
 
     private void cancelCall() {

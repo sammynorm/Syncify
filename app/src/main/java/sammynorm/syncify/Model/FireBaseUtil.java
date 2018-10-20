@@ -11,19 +11,20 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static android.content.ContentValues.TAG;
 
 public class FireBaseUtil {
 
-    private static void addUserToDB(String id, String displayname)
-    {
+    private static void addUserToDB(String id, String displayname) {
         FirebaseFirestore mDatabase = FirebaseFirestore.getInstance();
-        User user = new User(id, displayname, null, 0, 0);
+        User user = new User(id, displayname, null, true, 0);
         mDatabase.collection("Accounts").document(id).set(user);
     }
 
-    public static void doesUserExist(final String id, final String display_name)
-    {
+    public static void doesUserExist(final String id, final String display_name) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         DocumentReference docRef = db.collection("Accounts").document(id);
         docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
@@ -40,17 +41,22 @@ public class FireBaseUtil {
                 } else {
                     Log.d(TAG, "get failed with ", task.getException());
                 }
+
             }
         });
     }
 
-    public static void startedSong(String userid, String songID)
-    {
+    public static void updateSongInfo(String userid, String uri, double songPosition, boolean songState) {
         FirebaseFirestore mDatabase = FirebaseFirestore.getInstance();
-        DocumentReference songPlayingRef = mDatabase.collection("Accounts").document(userid);
+        DocumentReference updateRef = mDatabase.collection("Accounts").document(userid);
 
-        songPlayingRef
-                .update("songPlayingStr", songID)
+        Map<String, Object> songDetails = new HashMap<>();
+        songDetails.put("songPlayingStr", uri);
+        songDetails.put("songState", songState);
+        songDetails.put("songTiming", songPosition);
+
+        updateRef
+                .update(songDetails)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
