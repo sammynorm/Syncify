@@ -48,8 +48,6 @@ public class UserUpdates {
                 try {
                     final JSONObject jsonObject = new JSONObject(response.body().string());
                     setId(jsonObject.getString("id"));
-
-
                     FireBaseUtil.doesUserExist(jsonObject.getString("id"), jsonObject.getString("display_name"));
                 } catch (JSONException e) {
                     e.printStackTrace();
