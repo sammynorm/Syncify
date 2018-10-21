@@ -4,14 +4,17 @@ public class User {
 
     String uid;
     String username;
+    String imageURL;
     String songPlaying;
     boolean songState;
     double songTime;
 
 
-    public User(String uid, String username, String songPlaying, boolean songState, double songTime) {
+
+    public User(String uid, String username, String imageURL, String songPlaying, boolean songState, double songTime) {
         this.uid = uid;
         this.username = username;
+        this.imageURL = imageURL;
         this.songPlaying = songPlaying;
         this.songState = songState;
         this.songTime = songTime;

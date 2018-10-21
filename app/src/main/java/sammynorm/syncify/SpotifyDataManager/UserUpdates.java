@@ -29,6 +29,8 @@ public class UserUpdates {
             Log.d(TAG, "Empty token");
         }
 
+
+        //Make API call to spotify for all the user Deets
         final Request request = new Request.Builder()
                 .url("https://api.spotify.com/v1/me")
                 .addHeader("Authorization", "Bearer " + mAccessToken)
@@ -46,14 +48,27 @@ public class UserUpdates {
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 try {
-                    final JSONObject jsonObject = new JSONObject(response.body().string());
+                    //2 Json Objects because there are nested json items in here :/
+                    final JSONObject jsonObject;
+                    final JSONObject jsonImageURL;
+
+                    jsonObject = new JSONObject(response.body().string());
+
+                    //cant be converted to json without removing these brackets
+                    String str = jsonObject.getString("images");
+                    str = str.replace("[", "");
+                    str = str.replace("]", "");
+                    jsonImageURL = new JSONObject(str);
+
+                    //Set ID for Subscription
                     setId(jsonObject.getString("id"));
-                    FireBaseUtil.doesUserExist(jsonObject.getString("id"), jsonObject.getString("display_name"));
+                    FireBaseUtil.doesUserExist(jsonObject.getString("id"), jsonObject.getString("display_name"), jsonImageURL.getString("url"));
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
         });
+        //Maybe change this later -- It only is here because it's functions run faster and ends up running with no ID
         setSubscriberOn(context);
     }
 

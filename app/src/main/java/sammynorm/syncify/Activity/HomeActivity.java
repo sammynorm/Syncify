@@ -2,11 +2,9 @@ package sammynorm.syncify.Activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.widget.TextView;
 
-import com.spotify.android.appremote.api.PlayerApi;
-import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
@@ -23,19 +21,14 @@ public class HomeActivity extends AppCompatActivity implements HomeView {
     public String accessToken;
 
     UserUpdates dm = new UserUpdates();
-    private SpotifyAppRemote mSpotifyAppRemote;
-    PlayerApi playerApi;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
+        //Status bars are finicky with Custom toolbars :(
+       // getWindow().setStatusBarColor(ContextCompat.getColor(this ,R.color.colorPrimary));
         setContentView(R.layout.activity_home);
         startLogin();
-
-        TextView textField = (TextView) findViewById(R.id.songPlayingText);
-        textField.setText("Test");
     }
 
     public void startLogin() {
@@ -61,9 +54,6 @@ public class HomeActivity extends AppCompatActivity implements HomeView {
                     //Check if user exists in UserUpdates/Firebase and Create if not
                     accessToken = response.getAccessToken();
                     dm.checkUserExists(accessToken, this);
-/*
-                    dm.setSubscriberOn(accessToken, this);
-*/
                     break;
 
                 // Auth flow returned an error

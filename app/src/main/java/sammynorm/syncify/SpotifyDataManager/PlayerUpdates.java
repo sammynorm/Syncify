@@ -41,7 +41,6 @@ public class PlayerUpdates {
                                         //Also prevent duplicate entries for firebase
                                         if (!playerState.toString().equals(duplicateChecker)) {
                                             duplicateChecker = playerState.toString();
-
                                             //Remove extra characters
                                             FireBaseUtil.updateSongInfo(id, playerState.track.uri, playerState.playbackPosition, playerState.isPaused);
                                         }
