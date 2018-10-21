@@ -23,6 +23,21 @@
             android:layout_gravity="center" />
     </android.support.v7.widget.Toolbar>
 
+    <com.mancj.materialsearchbar.MaterialSearchBar
+        android:id="@+id/searchBar"
+        style="@style/MaterialSearchBarLight"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintLeft_toLeftOf="@+id/guideline2"
+        app:layout_constraintRight_toRightOf="@+id/guideline"
+        app:layout_constraintTop_toTopOf="@+id/guidelinetop"
+        app:layout_constraintBottom_toBottomOf="@+id/guidelinebottom"
+        app:mt_roundedSearchBarEnabled="true"
+        app:mt_hint="Search Users"
+        app:mt_maxSuggestionsCount="10"
+        app:mt_placeholder="Search Users" />
+
+
 
 
 
