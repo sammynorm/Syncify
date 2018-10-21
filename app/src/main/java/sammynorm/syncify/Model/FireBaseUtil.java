@@ -59,7 +59,7 @@ public class FireBaseUtil {
         Map<String, Object> songDetails = new HashMap<>();
         songDetails.put("songPlayingStr", uri);
         songDetails.put("songState", songState);
-        songDetails.put("songTiming", songPosition);
+        songDetails.put("songTime", songPosition);
 
 
         //ahh my god average write time to firebase is like .3 seconds going to have to try a different solution
