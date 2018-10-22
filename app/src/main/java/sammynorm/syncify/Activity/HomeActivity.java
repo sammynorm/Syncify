@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
+
 import sammynorm.syncify.R;
 import sammynorm.syncify.SpotifyDataManager.UserUpdates;
 import sammynorm.syncify.View.HomeView;

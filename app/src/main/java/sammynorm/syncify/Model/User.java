@@ -1,7 +1,6 @@
 package sammynorm.syncify.Model;
 
 public class User {
-
     String uid;
     String username;
     String imageURL;

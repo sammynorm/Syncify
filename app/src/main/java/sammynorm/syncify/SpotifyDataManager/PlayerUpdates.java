@@ -11,7 +11,6 @@ import com.spotify.protocol.client.CallResult;
 import com.spotify.protocol.client.ErrorCallback;
 import com.spotify.protocol.client.Subscription;
 import com.spotify.protocol.types.PlayerState;
-
 import sammynorm.syncify.Activity.HomeActivity;
 import sammynorm.syncify.Model.FireBaseUtil;
 
