@@ -18,7 +18,6 @@ import sammynorm.syncify.Model.FireBaseUtil;
 import static android.content.ContentValues.TAG;
 
 public class PlayerUpdates {
-
     private PlayerApi playerApi;
     private String duplicateChecker;
     private ConnectionParams connectionParams =

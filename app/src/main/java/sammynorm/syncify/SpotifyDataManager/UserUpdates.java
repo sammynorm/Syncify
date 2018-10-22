@@ -76,7 +76,6 @@ public class UserUpdates {
         this.id = id;
     }
 
-
     private void setSubscriberOn(final Context context) {
         //Delay So that DB isn't locked from other method
         Handler handler = new Handler();

@@ -9,7 +9,6 @@ public class User {
     boolean songState;
     double songTime;
 
-
     public User(String uid, String username, String imageURL, String songPlaying, boolean songState, double songTime) {
         this.uid = uid;
         this.username = username;
