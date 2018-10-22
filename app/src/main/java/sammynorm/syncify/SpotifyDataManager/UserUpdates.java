@@ -21,8 +21,8 @@ import static android.content.ContentValues.TAG;
 
 public class UserUpdates {
     private final OkHttpClient mOkHttpClient = new OkHttpClient();
-    private Call mCall;
     public String id;
+    private Call mCall;
 
     public void checkUserExists(String mAccessToken, Context context) {
         if (mAccessToken == null) {

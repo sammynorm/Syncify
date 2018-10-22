@@ -1,12 +1,9 @@
 package sammynorm.syncify.Model;
 
 import android.support.annotation.NonNull;
-import android.util.Log;
 
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -16,10 +13,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.HashMap;
 import java.util.Map;
 
-import static android.content.ContentValues.TAG;
-
 public class FireBaseUtil {
-
 
 
     private static void addUserToDB(String id, String displayname, String imageURL) {
@@ -28,7 +22,7 @@ public class FireBaseUtil {
         users.put(id, new User(id, displayname, imageURL, null, true, 0));
         DatabaseReference myRef = mDatabase.getReference("userDetails");
         myRef.setValue(users);
-        }
+    }
 
     public static void doesUserExist(final String id, final String display_name, final String imageURI) {
         DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference("userDetails");
@@ -36,7 +30,7 @@ public class FireBaseUtil {
 
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if(!dataSnapshot.hasChild(id)) {
+                if (!dataSnapshot.hasChild(id)) {
                     addUserToDB(id, display_name, imageURI);
                 }
             }
@@ -50,7 +44,7 @@ public class FireBaseUtil {
     }
 
 
-   //Needs UserID as reference, only thing that matters is songpos,songuri,isPaused?
+    //Needs UserID as reference, only thing that matters is songpos,songuri,isPaused?
     public static void updateSongInfo(String userid, String uri, double songPosition, boolean songState) {
         final double initialTime = System.nanoTime();
 

@@ -26,7 +26,7 @@ public class HomeActivity extends AppCompatActivity implements HomeView {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //Status bars are finicky with Custom toolbars :(
-        getWindow().setStatusBarColor(ContextCompat.getColor(this ,R.color.colorPrimary));
+        getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.colorPrimary));
         setContentView(R.layout.activity_home);
         startLogin();
     }
