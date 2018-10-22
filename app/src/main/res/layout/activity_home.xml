@@ -35,10 +35,9 @@
         app:mt_roundedSearchBarEnabled="true"
         app:mt_hint="Search Users"
         app:mt_maxSuggestionsCount="10"
-        app:mt_placeholder="Search Users" />
-
-
-
+        app:mt_searchBarColor = "#f1f3f4"
+        app:mt_placeholder="Search Users"
+        />
 
 
     <android.support.constraint.Guideline

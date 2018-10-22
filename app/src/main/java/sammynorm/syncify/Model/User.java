@@ -3,14 +3,16 @@ package sammynorm.syncify.Model;
 public class User {
     String uid;
     String username;
+    String accName;
     String imageURL;
     String songPlaying;
     boolean songState;
     double songTime;
 
-    public User(String uid, String username, String imageURL, String songPlaying, boolean songState, double songTime) {
-        this.uid = uid;
+    public User(String username, String accName, String accURI, String imageURL, String songPlaying, boolean songState, double songTime) {
+        this.accName = accName;
         this.username = username;
+
         this.imageURL = imageURL;
         this.songPlaying = songPlaying;
         this.songState = songState;

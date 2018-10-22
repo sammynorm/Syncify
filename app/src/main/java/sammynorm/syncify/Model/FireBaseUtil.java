@@ -1,6 +1,8 @@
 package sammynorm.syncify.Model;
 
+import android.content.Intent;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -8,18 +10,26 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import sammynorm.syncify.Activity.HomeActivity;
+import sammynorm.syncify.Activity.UserNameSelect;
+import sammynorm.syncify.SpotifyDataManager.UserUpdates;
 
 public class FireBaseUtil {
 
 
-    private static void addUserToDB(String id, String displayname, String imageURL) {
+    private static void addUserToDB(String userName, String id, String accname, String imageURL) {
         FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
         Map<String, User> users = new HashMap<>();
-        users.put(id, new User(id, displayname, imageURL, null, true, 0));
+        //imageURL looks like it's too long to put in there. WIll have to call mnually
+        users.put(id, new User(userName, accname, id,  imageURL, null, true, 0));
         DatabaseReference myRef = mDatabase.getReference("userDetails");
         myRef.setValue(users);
     }
@@ -30,18 +40,16 @@ public class FireBaseUtil {
 
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (!dataSnapshot.hasChild(id)) {
-                    addUserToDB(id, display_name, imageURI);
+                    if(!dataSnapshot.hasChild(id)) {
+
+                       // addUserToDB(username, id, display_name, imageURI); //use shared prefs
                 }
             }
-
-
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-            }
+            public void onCancelled(DatabaseError databaseError) { }
 
         });
-    }
+        }
 
 
     //Needs UserID as reference, only thing that matters is songpos,songuri,isPaused?
@@ -55,8 +63,6 @@ public class FireBaseUtil {
         songDetails.put("songState", songState);
         songDetails.put("songTime", songPosition);
 
-
-        //ahh my god average write time to firebase is like .3 seconds going to have to try a different solution
         mDatabase.child("userDetails").child(userid).updateChildren(songDetails)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
@@ -72,7 +78,27 @@ public class FireBaseUtil {
                         // ...
                     }
                 });
+        }
 
+        public static List<User> getSearchList(final String queryString) {
+            final List<User > myList = new ArrayList<User>();
 
-    }
+            DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference("userDetails");
+            rootRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    for(DataSnapshot ds : dataSnapshot.getChildren()) {
+                        if (ds.child("username").getValue(String.class).toLowerCase().equals(queryString.toLowerCase())) {
+                            User user = ds.getValue(User.class);
+                            myList.add(user);
+                        } else {
+                            System.out.println("user does not exist!");
+                        }
+                    }
+                }
+                @Override
+                public void onCancelled(DatabaseError databaseError) { }
+            });
+            return myList;
+        }
 }

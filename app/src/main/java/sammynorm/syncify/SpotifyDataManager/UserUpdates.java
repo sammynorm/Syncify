@@ -8,13 +8,16 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import sammynorm.syncify.Activity.HomeActivity;
 import sammynorm.syncify.Model.FireBaseUtil;
+import sammynorm.syncify.Model.User;
 
 import static android.content.ContentValues.TAG;
 
@@ -27,7 +30,6 @@ public class UserUpdates {
         if (mAccessToken == null) {
             Log.d(TAG, "Empty token");
         }
-
 
         //Make API call to spotify for all the user Deets
         final Request request = new Request.Builder()
@@ -84,8 +86,11 @@ public class UserUpdates {
                 playerUpdates.subscribeToPlayer(id, context);
             }
         }, 5000);
+    }
 
-
+    public List<User> getUserList(String query)
+    {
+        return FireBaseUtil.getSearchList(query);
     }
 
     private void cancelCall() {
