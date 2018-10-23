@@ -34,16 +34,6 @@ public class HomeActivity extends AppCompatActivity implements HomeView, Materia
     @SuppressLint("ApplySharedPref")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
-        //Check if first time Run, and set UserName
-        final String PREFS_NAME = "MyPrefsFile";
-        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-        if (settings.getBoolean("my_first_time", true)) {
-            Intent i = new Intent(this, UserNameSelect.class);
-            startActivity(i);
-            // record the fact that the app has been started at least once
-            settings.edit().putBoolean("my_first_time", false).commit();
-        }
         super.onCreate(savedInstanceState);
         //Status bars are finicky with Custom toolbars :(
         getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.colorPrimary));
@@ -100,11 +90,7 @@ public class HomeActivity extends AppCompatActivity implements HomeView, Materia
     public void onSearchConfirmed(CharSequence text) {
         String search = text.toString();
         System.out.println("SearchConfirmed:" + text);
-        Intent i = new Intent(this, SearchResultsActivity.class);
-        Bundle bundle = new Bundle();
-        bundle.putString("searchString", search);
-        i.putExtras(bundle);
-        startActivity(i);
+        UserUpdates userUpdates = new UserUpdates();
     }
 
     @Override
