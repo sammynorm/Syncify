@@ -5,16 +5,16 @@ public class User {
     String username;
     String accName;
     String imageURL;
-    String songPlaying;
+    String songPlayingStr;
     boolean songState;
-    double songTime;
+    long songTime;
 
-    public User(String username, String accName, String accURI, String imageURL, String songPlaying, boolean songState, double songTime) {
-        this.accName = accName;
+    public User(String uid, String username, String accName, String imageURL, String songPlayingStr, boolean songState, long songTime) {
+        this.uid = uid;
         this.username = username;
-
+        this.accName = accName;
         this.imageURL = imageURL;
-        this.songPlaying = songPlaying;
+        this.songPlayingStr = songPlayingStr;
         this.songState = songState;
         this.songTime = songTime;
     }
@@ -35,12 +35,28 @@ public class User {
         this.username = username;
     }
 
-    public String getSongPlaying() {
-        return songPlaying;
+    public String getAccName() {
+        return accName;
     }
 
-    public void setSongPlaying(String songPlaying) {
-        this.songPlaying = songPlaying;
+    public void setAccName(String accName) {
+        this.accName = accName;
+    }
+
+    public String getImageURL() {
+        return imageURL;
+    }
+
+    public void setImageURL(String imageURL) {
+        this.imageURL = imageURL;
+    }
+
+    public String getSongPlayingStr() {
+        return songPlayingStr;
+    }
+
+    public void setSongPlayingStr(String songPlayingStr) {
+        this.songPlayingStr = songPlayingStr;
     }
 
     public boolean getSongState() {
@@ -51,13 +67,17 @@ public class User {
         this.songState = songState;
     }
 
-    public double getSongTime() {
+    public long getSongTime() {
         return songTime;
     }
 
-    public void setSongTime(double songTime) {
+    public void setSongTime(long songTime) {
         this.songTime = songTime;
     }
 
 
+
+    public User() { }
+
 }
+

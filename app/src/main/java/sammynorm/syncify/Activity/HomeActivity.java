@@ -1,12 +1,15 @@
 package sammynorm.syncify.Activity;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
+import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.View;
+import android.widget.TextView;
 
 import com.mancj.materialsearchbar.MaterialSearchBar;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
@@ -16,32 +19,30 @@ import com.spotify.sdk.android.authentication.AuthenticationResponse;
 import java.util.List;
 
 import sammynorm.syncify.R;
+import sammynorm.syncify.SpotifyDataManager.PlayerUpdates;
 import sammynorm.syncify.SpotifyDataManager.UserUpdates;
 import sammynorm.syncify.View.HomeView;
 
-public class HomeActivity extends AppCompatActivity implements HomeView, MaterialSearchBar.OnSearchActionListener {
+public class HomeActivity extends AppCompatActivity implements HomeView, MaterialSearchBar.OnSearchActionListener, TextWatcher {
 
     public static final String CLIENT_ID = "f71718e83a9e44cbb83869874d5f97c3";
     public static final String REDIRECT_URI = "sync-login://callback";
     private static final int REQUEST_CODE = 1337;
+    SharedPreferences settings;
     public String accessToken;
     private List<String> lastSearches;
-    private MaterialSearchBar searchBar;
-
     UserUpdates dm = new UserUpdates();
 
-
-    @SuppressLint("ApplySharedPref")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //Status bars are finicky with Custom toolbars :(
-        getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.colorPrimary));
         setContentView(R.layout.activity_home);
+        settings = getSharedPreferences("MyPrefsFile", 0);
+        setupToolbar();
         startLogin();
-
-        searchBar = (MaterialSearchBar) findViewById(R.id.searchBar);
+        MaterialSearchBar searchBar = (MaterialSearchBar) findViewById(R.id.searchBar);
         searchBar.setOnSearchActionListener(this);
+        searchBar.addTextChangeListener(this);
     }
 
     public void startLogin() {
@@ -66,7 +67,8 @@ public class HomeActivity extends AppCompatActivity implements HomeView, Materia
                 case TOKEN:
                     //Check if user exists in UserUpdates/Firebase and Create if not
                     accessToken = response.getAccessToken();
-                    dm.checkUserExists(accessToken, this);
+                    dm.checkUserExists(accessToken, settings.getString("userName", null), this);
+
                     break;
 
                 // Auth flow returned an error
@@ -90,13 +92,38 @@ public class HomeActivity extends AppCompatActivity implements HomeView, Materia
     public void onSearchConfirmed(CharSequence text) {
         String search = text.toString();
         System.out.println("SearchConfirmed:" + text);
-        UserUpdates userUpdates = new UserUpdates();
+        dm.subscribeToSearchedUser(search);
     }
 
     @Override
     public void onButtonClicked(int buttonCode) {
         System.out.println("Changed ButtonCode:" + buttonCode);
 
+    }
+
+    public void setupToolbar(){
+        getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.colorPrimary));
+        CharSequence username = settings.getString("userName", null);
+        View v = getLayoutInflater().inflate(R.layout.activity_home,null);
+        Toolbar myToolbar = (Toolbar) v.findViewById(R.id.toolbar);
+        TextView txtview = (TextView) findViewById(R.id.toolbar_title);
+        setSupportActionBar(myToolbar);
+        txtview.setText(username);
+    }
+
+    @Override
+    public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+    @Override
+    public void onTextChanged(CharSequence s, int start, int before, int count) {
+        //TODO suggestions adapter
+
+    }
+
+    @Override
+    public void afterTextChanged(Editable s) { }
+
+    public void startPlayingActivity(){
     }
 }
 

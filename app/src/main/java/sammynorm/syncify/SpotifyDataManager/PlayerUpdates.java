@@ -13,10 +13,14 @@ import com.spotify.protocol.client.Subscription;
 import com.spotify.protocol.types.PlayerState;
 import sammynorm.syncify.Activity.HomeActivity;
 import sammynorm.syncify.Model.FireBaseUtil;
+import sammynorm.syncify.Model.User;
 
 import static android.content.ContentValues.TAG;
 
 public class PlayerUpdates {
+
+    private static final PlayerUpdates instance = new PlayerUpdates();
+
     private PlayerApi playerApi;
     private String duplicateChecker;
     private ConnectionParams connectionParams =
@@ -25,7 +29,8 @@ public class PlayerUpdates {
                     .showAuthView(true)
                     .build();
 
-    public void subscribeToPlayer(final String id, Context context) {
+    //Feeds data to Firebase
+    public void subscribeToMyPlayer(final String id, Context context) {
         SpotifyAppRemote.connect(context, connectionParams,
                 new Connector.ConnectionListener() {
                     @Override
@@ -39,7 +44,7 @@ public class PlayerUpdates {
                                         //Also prevent duplicate entries for firebase
                                         if (!playerState.toString().equals(duplicateChecker)) {
                                             duplicateChecker = playerState.toString();
-                                            //Remove extra characters
+                                            //Remove extra character
                                             FireBaseUtil.updateSongInfo(id, playerState.track.uri, playerState.playbackPosition, playerState.isPaused);
                                         }
                                     }
@@ -55,39 +60,28 @@ public class PlayerUpdates {
                     @Override
                     public void onFailure(Throwable throwable) {
                         System.out.println(throwable.getMessage());
-
                     }
                 });
     }
 
-    public void getSongPlaying(Context context) {
-        SpotifyAppRemote.connect(context, connectionParams, new Connector.ConnectionListener() {
-            @Override
-            public void onConnected(SpotifyAppRemote spotifyAppRemote) {
-                //Assign to Global Var
-                Log.d("MainActivity", "Connected! Yay!");
-                playerApi = spotifyAppRemote.getPlayerApi();
-                playerApi.getPlayerState().setResultCallback(new CallResult.ResultCallback<PlayerState>() {
-                    @Override
-                    public void onResult(PlayerState playerState) {
-                        //This works
-                        System.out.println(playerState.track);
-                    }
-                })
-                        .setErrorCallback(new ErrorCallback() {
-                            @Override
-                            public void onError(Throwable throwable) {
-                                // =(
-                            }
-                        });
-            }
-
-            @Override
-            public void onFailure(Throwable throwable) {
-                Log.e("MainActivity", throwable.getMessage(), throwable);
-
-                // Something went wrong when attempting to connect! Handle errors here
-            }
-        });
+    //Receives data from firebase
+    public void setPlayBack(User user)
+    {
+        String songName = user.getSongPlayingStr();
+        long songTime = user.getSongTime();
+        Boolean isPaused = user.getSongState();
+        playerApi.play(songName);
+        playerApi.seekTo(songTime);
+        if(isPaused){
+            playerApi.pause();
+        }
     }
-}
+
+    private PlayerUpdates(){}
+
+
+    public static PlayerUpdates getInstance(){
+        return instance;
+    }
+
+ }

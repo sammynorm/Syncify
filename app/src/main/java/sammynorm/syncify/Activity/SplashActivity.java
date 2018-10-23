@@ -1,10 +1,7 @@
 package sammynorm.syncify.Activity;
 
-import android.content.SharedPreferences;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -25,8 +22,7 @@ public class SplashActivity extends AppCompatActivity {
                 Intent intent = new Intent(this, HomeActivity.class);
                 startActivity(intent);
                 finish();
-            }
-        else if (username == null) {
+            } else if (username == null) {
             Intent i = new Intent(this, UserNameSelect.class);
             startActivity(i);
             // record the fact that the app has been started at least once

@@ -2,11 +2,10 @@ package sammynorm.syncify.Activity;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.ImageButton;
 
 import sammynorm.syncify.R;
 
@@ -27,7 +26,7 @@ public class UserNameSelect extends AppCompatActivity implements  View.OnClickLi
         String txtStr =  text.getText().toString();
         if(!txtStr.equals("")) //Says this is always null? It's not m8
         {
-            //From here need to see if the username already exists in firebase and then commit
+            //TODO add firebase condition if U/N exists
             settings.edit().putString("userName", text.getText().toString()).commit(); //Need this set immediately, stop telling me to do in bg plz
             Intent i = new Intent(this, HomeActivity.class);
             startActivity(i);

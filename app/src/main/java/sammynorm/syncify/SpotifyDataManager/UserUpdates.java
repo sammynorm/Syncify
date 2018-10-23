@@ -26,7 +26,8 @@ public class UserUpdates {
     public String id;
     private Call mCall;
 
-    public void checkUserExists(String mAccessToken, Context context) {
+
+    public void checkUserExists(String mAccessToken, final String userName, Context context) {
         if (mAccessToken == null) {
             Log.d(TAG, "Empty token");
         }
@@ -63,7 +64,7 @@ public class UserUpdates {
 
                     //Set ID for Subscription
                     setId(jsonObject.getString("id"));
-                    FireBaseUtil.doesUserExist(jsonObject.getString("id"), jsonObject.getString("display_name"), jsonImageURL.getString("url"));
+                    FireBaseUtil.doesUserExist(jsonObject.getString("id"), userName, jsonObject.getString("display_name"), jsonImageURL.getString("url"));
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -77,20 +78,27 @@ public class UserUpdates {
         this.id = id;
     }
 
+    //This Feeds Users data to Firebase
     private void setSubscriberOn(final Context context) {
+        final PlayerUpdates playerUpdates = PlayerUpdates.getInstance();
         //Delay So that DB isn't locked from other method
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             public void run() {
-                PlayerUpdates playerUpdates = new PlayerUpdates();
-                playerUpdates.subscribeToPlayer(id, context);
+                playerUpdates.subscribeToMyPlayer(id, context);
             }
         }, 5000);
     }
 
+
+    //This will be for Suggestions
     public List<User> getUserList(String query)
     {
         return FireBaseUtil.getSearchList(query);
+    }
+
+    public void subscribeToSearchedUser(String query){
+        FireBaseUtil.subscribeToUserbyUNCheck(query);
     }
 
     private void cancelCall() {
