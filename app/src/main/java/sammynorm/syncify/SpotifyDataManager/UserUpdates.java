@@ -97,8 +97,13 @@ public class UserUpdates {
         return FireBaseUtil.getSearchList(query);
     }
 
-    public void subscribeToSearchedUser(String query){
-        FireBaseUtil.subscribeToUserbyUNCheck(query);
+    public boolean subscribeToSearchedUser(String query, String username) {
+        if (!query.equals(username)) {
+            FireBaseUtil.subscribeToUserbyUNCheck(query);
+            return true;
+        } else{
+            return false;
+        }
     }
 
     private void cancelCall() {

@@ -91,8 +91,12 @@ public class HomeActivity extends AppCompatActivity implements HomeView, Materia
     @Override
     public void onSearchConfirmed(CharSequence text) {
         String search = text.toString();
+
         System.out.println("SearchConfirmed:" + text);
-        dm.subscribeToSearchedUser(search);
+        if(dm.subscribeToSearchedUser(search, settings.getString("userName", null)))
+        {
+            //dont allow user to type their name in and ddos firebase..
+        }
     }
 
     @Override
