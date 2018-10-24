@@ -1,6 +1,10 @@
 package sammynorm.syncify.SpotifyDataManager;
 
+import android.app.Service;
 import android.content.Context;
+import android.content.Intent;
+import android.os.IBinder;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.spotify.android.appremote.api.ConnectionParams;
@@ -11,6 +15,7 @@ import com.spotify.protocol.client.CallResult;
 import com.spotify.protocol.client.ErrorCallback;
 import com.spotify.protocol.client.Subscription;
 import com.spotify.protocol.types.PlayerState;
+
 import sammynorm.syncify.Activity.HomeActivity;
 import sammynorm.syncify.Model.FireBaseUtil;
 import sammynorm.syncify.Model.User;
@@ -19,7 +24,9 @@ import static android.content.ContentValues.TAG;
 
 public class PlayerUpdates {
 
+    Boolean doesUserExist;
     private static final PlayerUpdates instance = new PlayerUpdates();
+    String id;
 
     private PlayerApi playerApi;
     private String duplicateChecker;
@@ -29,8 +36,16 @@ public class PlayerUpdates {
                     .showAuthView(true)
                     .build();
 
+    private PlayerUpdates() {}
+
+    public static PlayerUpdates getInstance() {
+        return instance;
+    }
+
     //Feeds data to Firebase
-    public void subscribeToMyPlayer(final String id, Context context) {
+    public void mySpotifyPlayerSubscription(final String id, Context context) {
+        this.id = id;
+        FireBaseUtil.addSongDetailsRequestObserver(id);
         SpotifyAppRemote.connect(context, connectionParams,
                 new Connector.ConnectionListener() {
                     @Override
@@ -45,7 +60,7 @@ public class PlayerUpdates {
                                         if (!playerState.toString().equals(duplicateChecker)) {
                                             duplicateChecker = playerState.toString();
                                             //Remove extra character
-                                            FireBaseUtil.updateSongInfo(id, playerState.track.uri, playerState.playbackPosition, playerState.isPaused);
+                                            FireBaseUtil.updateFireBaseSongInfo(id, playerState.track.uri, playerState.playbackPosition, playerState.isPaused);
                                         }
                                     }
                                 })
@@ -64,24 +79,48 @@ public class PlayerUpdates {
                 });
     }
 
+
     //Receives data from firebase
-    public void setPlayBack(User user)
-    {
-        String songName = user.getSongPlayingStr();
-        long songTime = user.getSongTime();
-        Boolean isPaused = user.getSongState();
-        playerApi.play(songName);
-        playerApi.seekTo(songTime);
-        if(isPaused){
-            playerApi.pause();
-        }
+    public void setPlayBack(User user) {
+        final String songName = user.getSongPlayingStr();
+        final long songTime = user.getSongTime();
+        final Boolean isPaused = user.getSongState();
+
+        playerApi.pause();
+
+        playerApi.play(songName).setResultCallback(new CallResult.ResultCallback() {
+                    @Override
+                    public void onResult(Object o) {
+                        playerApi.seekTo(songTime);
+                        if(isPaused){
+                            playerApi.pause();
+                        } else {
+                            playerApi.resume();
+                        }
+                    }
+                })
+                .setErrorCallback(new ErrorCallback() {
+                    @Override
+                    public void onError(Throwable throwable) {
+                        // =(
+                    }
+                });
     }
 
-    private PlayerUpdates(){}
-
-
-    public static PlayerUpdates getInstance(){
-        return instance;
+    public void forceUpdateSongDetails(){
+        playerApi.getPlayerState()
+                .setResultCallback(new CallResult.ResultCallback<PlayerState>() {
+                    @Override
+                    public void onResult(PlayerState playerState) {
+                        FireBaseUtil.updateFireBaseSongInfo(id, playerState.track.uri, playerState.playbackPosition, playerState.isPaused);
+                    }
+                })
+                .setErrorCallback(new ErrorCallback() {
+                    @Override
+                    public void onError(Throwable throwable) {
+                        // =(
+                    }
+                });
     }
 
- }
+}

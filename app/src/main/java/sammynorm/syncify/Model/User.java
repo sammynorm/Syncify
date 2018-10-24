@@ -8,8 +8,11 @@ public class User {
     String songPlayingStr;
     boolean songState;
     long songTime;
+    boolean requestedUpdate;
 
-    public User(String uid, String username, String accName, String imageURL, String songPlayingStr, boolean songState, long songTime) {
+
+
+    public User(String uid, String username, String accName, String imageURL, String songPlayingStr, boolean songState, long songTime, boolean requestedUpdate) {
         this.uid = uid;
         this.username = username;
         this.accName = accName;
@@ -17,6 +20,10 @@ public class User {
         this.songPlayingStr = songPlayingStr;
         this.songState = songState;
         this.songTime = songTime;
+        this.requestedUpdate = requestedUpdate;
+    }
+
+    public User() {
     }
 
     public String getUid() {
@@ -71,13 +78,13 @@ public class User {
         return songTime;
     }
 
-    public void setSongTime(long songTime) {
-        this.songTime = songTime;
+    public boolean isRequestedUpdate() {
+        return requestedUpdate;
     }
 
-
-
-    public User() { }
+    public void setRequestedUpdate(boolean requestedUpdate) {
+        this.requestedUpdate = requestedUpdate;
+    }
 
 }
 

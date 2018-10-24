@@ -19,7 +19,6 @@ import com.spotify.sdk.android.authentication.AuthenticationResponse;
 import java.util.List;
 
 import sammynorm.syncify.R;
-import sammynorm.syncify.SpotifyDataManager.PlayerUpdates;
 import sammynorm.syncify.SpotifyDataManager.UserUpdates;
 import sammynorm.syncify.View.HomeView;
 
@@ -28,10 +27,10 @@ public class HomeActivity extends AppCompatActivity implements HomeView, Materia
     public static final String CLIENT_ID = "f71718e83a9e44cbb83869874d5f97c3";
     public static final String REDIRECT_URI = "sync-login://callback";
     private static final int REQUEST_CODE = 1337;
-    SharedPreferences settings;
     public String accessToken;
-    private List<String> lastSearches;
+    SharedPreferences settings;
     UserUpdates dm = new UserUpdates();
+    private List<String> lastSearches;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,10 +91,12 @@ public class HomeActivity extends AppCompatActivity implements HomeView, Materia
     public void onSearchConfirmed(CharSequence text) {
         String search = text.toString();
 
-        System.out.println("SearchConfirmed:" + text);
-        if(dm.subscribeToSearchedUser(search, settings.getString("userName", null)))
-        {
-            //dont allow user to type their name in and ddos firebase..
+        //This will return false if U/N and query is the same
+        if (dm.subscribeToSearchedUser(search, settings.getString("userName", null))) {
+            Intent i = new Intent(this, UserRoom.class);
+            startActivity(i);
+        }  else{
+            System.out.println("didnt work names all wrong");
         }
     }
 
@@ -105,10 +106,10 @@ public class HomeActivity extends AppCompatActivity implements HomeView, Materia
 
     }
 
-    public void setupToolbar(){
+    public void setupToolbar() {
         getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.colorPrimary));
         CharSequence username = settings.getString("userName", null);
-        View v = getLayoutInflater().inflate(R.layout.activity_home,null);
+        View v = getLayoutInflater().inflate(R.layout.activity_home, null);
         Toolbar myToolbar = (Toolbar) v.findViewById(R.id.toolbar);
         TextView txtview = (TextView) findViewById(R.id.toolbar_title);
         setSupportActionBar(myToolbar);
@@ -116,7 +117,8 @@ public class HomeActivity extends AppCompatActivity implements HomeView, Materia
     }
 
     @Override
-    public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+    }
 
     @Override
     public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -125,9 +127,10 @@ public class HomeActivity extends AppCompatActivity implements HomeView, Materia
     }
 
     @Override
-    public void afterTextChanged(Editable s) { }
+    public void afterTextChanged(Editable s) {
+    }
 
-    public void startPlayingActivity(){
+    public void startPlayingActivity() {
     }
 }
 

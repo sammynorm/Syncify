@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.util.Log;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -15,7 +16,6 @@ import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import sammynorm.syncify.Activity.HomeActivity;
 import sammynorm.syncify.Model.FireBaseUtil;
 import sammynorm.syncify.Model.User;
 
@@ -64,7 +64,7 @@ public class UserUpdates {
 
                     //Set ID for Subscription
                     setId(jsonObject.getString("id"));
-                    FireBaseUtil.doesUserExist(jsonObject.getString("id"), userName, jsonObject.getString("display_name"), jsonImageURL.getString("url"));
+                    FireBaseUtil.doesUserExistByID(jsonObject.getString("id"), userName, jsonObject.getString("display_name"), jsonImageURL.getString("url"));
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -74,6 +74,8 @@ public class UserUpdates {
         setSubscriberOn(context);
     }
 
+
+    //This is set for the SetSubscriberMethod Below
     public void setId(String id) {
         this.id = id;
     }
@@ -85,25 +87,19 @@ public class UserUpdates {
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             public void run() {
-                playerUpdates.subscribeToMyPlayer(id, context);
+                playerUpdates.mySpotifyPlayerSubscription(id, context);
             }
         }, 5000);
     }
 
 
     //This will be for Suggestions
-    public List<User> getUserList(String query)
-    {
-        return FireBaseUtil.getSearchList(query);
+    public List<User> getUserList(String query) {
+        return FireBaseUtil.getUserListFromQuery(query);
     }
 
     public boolean subscribeToSearchedUser(String query, String username) {
-        if (!query.equals(username)) {
-            FireBaseUtil.subscribeToUserbyUNCheck(query);
-            return true;
-        } else{
-            return false;
-        }
+        return !query.toLowerCase().equals(username.toLowerCase()) && FireBaseUtil.subscribeToRemoteUserIfExists(query);
     }
 
     private void cancelCall() {

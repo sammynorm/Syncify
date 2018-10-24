@@ -9,7 +9,7 @@ import android.widget.EditText;
 
 import sammynorm.syncify.R;
 
-public class UserNameSelect extends AppCompatActivity implements  View.OnClickListener {
+public class UserNameSelect extends AppCompatActivity implements View.OnClickListener {
     EditText text;
 
     @Override
@@ -23,22 +23,18 @@ public class UserNameSelect extends AppCompatActivity implements  View.OnClickLi
     public void imageButtonOnClick(View v) {
         final String PREFS_NAME = "MyPrefsFile";
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-        String txtStr =  text.getText().toString();
-        if(!txtStr.equals("")) //Says this is always null? It's not m8
-        {
+        String txtStr = text.getText().toString();
+        if (!txtStr.equals("")) {
             //TODO add firebase condition if U/N exists
-            settings.edit().putString("userName", text.getText().toString()).commit(); //Need this set immediately, stop telling me to do in bg plz
+            settings.edit().putString("userName", text.getText().toString()).commit(); //Need this set immediately
             Intent i = new Intent(this, HomeActivity.class);
             startActivity(i);
         }
     }
 
-    //Cant skip this step!
- /*   @Override
-    public void onBackPressed() { }*/
 
     @Override
     public void onClick(View v) {
-        text.getText().clear(); //or you can use editText.setText("");
+        text.getText().clear();
     }
 }
