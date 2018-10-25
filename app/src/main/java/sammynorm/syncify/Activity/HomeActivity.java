@@ -1,7 +1,9 @@
 package sammynorm.syncify.Activity;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -18,6 +20,7 @@ import com.spotify.sdk.android.authentication.AuthenticationResponse;
 
 import java.util.List;
 
+import sammynorm.syncify.Model.FireBaseUtil;
 import sammynorm.syncify.R;
 import sammynorm.syncify.SpotifyDataManager.UserUpdates;
 import sammynorm.syncify.View.HomeView;
@@ -30,6 +33,8 @@ public class HomeActivity extends AppCompatActivity implements HomeView, Materia
     public String accessToken;
     SharedPreferences settings;
     UserUpdates dm = new UserUpdates();
+    public static Thread t;
+
     private List<String> lastSearches;
 
     @Override
@@ -88,16 +93,10 @@ public class HomeActivity extends AppCompatActivity implements HomeView, Materia
     }
 
     @Override
-    public void onSearchConfirmed(CharSequence text) {
-        String search = text.toString();
+    public void onSearchConfirmed(final CharSequence text) {
+      //  new asyncCheck(this).execute(text.toString());
+        dm.subscribeToSearchedUser(this, text.toString(), settings.getString("userName", null));
 
-        //This will return false if U/N and query is the same
-        if (dm.subscribeToSearchedUser(search, settings.getString("userName", null))) {
-            Intent i = new Intent(this, UserRoom.class);
-            startActivity(i);
-        }  else{
-            System.out.println("didnt work names all wrong");
-        }
     }
 
     @Override
@@ -130,7 +129,13 @@ public class HomeActivity extends AppCompatActivity implements HomeView, Materia
     public void afterTextChanged(Editable s) {
     }
 
-    public void startPlayingActivity() {
+    public void onUserExistsReceiver(Context context){
+
+        if (FireBaseUtil.doesUserExist) {
+            context.startActivity(new Intent(context, UserRoom.class));
+        } else {
+            System.out.println(FireBaseUtil.doesUserExist + "Doesnt exist ");
+        }
     }
 }
 

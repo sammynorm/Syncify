@@ -24,9 +24,10 @@ import static android.content.ContentValues.TAG;
 
 public class PlayerUpdates {
 
-    Boolean doesUserExist;
     private static final PlayerUpdates instance = new PlayerUpdates();
     String id;
+    public boolean firstCall = true;
+
 
     private PlayerApi playerApi;
     private String duplicateChecker;
@@ -45,7 +46,7 @@ public class PlayerUpdates {
     //Feeds data to Firebase
     public void mySpotifyPlayerSubscription(final String id, Context context) {
         this.id = id;
-        FireBaseUtil.addSongDetailsRequestObserver(id);
+        FireBaseUtil.addRequestObserver(id);
         SpotifyAppRemote.connect(context, connectionParams,
                 new Connector.ConnectionListener() {
                     @Override
@@ -60,7 +61,7 @@ public class PlayerUpdates {
                                         if (!playerState.toString().equals(duplicateChecker)) {
                                             duplicateChecker = playerState.toString();
                                             //Remove extra character
-                                            FireBaseUtil.updateFireBaseSongInfo(id, playerState.track.uri, playerState.playbackPosition, playerState.isPaused);
+                                            FireBaseUtil.updateFireBaseSongInfo(id, playerState.track.uri, playerState.playbackPosition, playerState.isPaused, false);
                                         }
                                     }
                                 })
@@ -87,7 +88,6 @@ public class PlayerUpdates {
         final Boolean isPaused = user.getSongState();
 
         playerApi.pause();
-
         playerApi.play(songName).setResultCallback(new CallResult.ResultCallback() {
                     @Override
                     public void onResult(Object o) {
@@ -107,12 +107,12 @@ public class PlayerUpdates {
                 });
     }
 
-    public void forceUpdateSongDetails(){
+    public void forceUpdateSongDetails(final boolean wasRemoteUserRequest){
         playerApi.getPlayerState()
                 .setResultCallback(new CallResult.ResultCallback<PlayerState>() {
                     @Override
                     public void onResult(PlayerState playerState) {
-                        FireBaseUtil.updateFireBaseSongInfo(id, playerState.track.uri, playerState.playbackPosition, playerState.isPaused);
+                        FireBaseUtil.updateFireBaseSongInfo(id, playerState.track.uri, playerState.playbackPosition, playerState.isPaused, wasRemoteUserRequest);
                     }
                 })
                 .setErrorCallback(new ErrorCallback() {

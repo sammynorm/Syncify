@@ -16,6 +16,7 @@ import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import sammynorm.syncify.Activity.HomeActivity;
 import sammynorm.syncify.Model.FireBaseUtil;
 import sammynorm.syncify.Model.User;
 
@@ -98,8 +99,16 @@ public class UserUpdates {
         return FireBaseUtil.getUserListFromQuery(query);
     }
 
-    public boolean subscribeToSearchedUser(String query, String username) {
-        return !query.toLowerCase().equals(username.toLowerCase()) && FireBaseUtil.subscribeToRemoteUserIfExists(query);
+    public void subscribeToSearchedUser(Context context, String query, String username) {
+        if(!query.toLowerCase().equals(username.toLowerCase())) {
+            FireBaseUtil.subscribeToRemoteUserIfExists(context, query);
+        }
+    }
+
+    public void fireBaseUserNameCheckCallback(Context context)
+    {
+        HomeActivity hm = new HomeActivity();
+        hm.onUserExistsReceiver(context);
     }
 
     private void cancelCall() {
