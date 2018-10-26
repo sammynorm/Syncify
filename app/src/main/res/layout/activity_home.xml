@@ -13,10 +13,12 @@
         android:layout_width="match_parent"
         android:layout_height="?android:attr/actionBarSize"
         android:background="@color/colorPrimary"
-        app:popupTheme="@style/AppTheme.PopupOverlay">
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
 
         <TextView
             android:id="@+id/toolbar_title"
+            android:textColor="#ffffff"
+            android:fontFamily="@font/montserrat"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             style="@style/TextAppearance.AppCompat.Widget.ActionBar.Title"
@@ -34,6 +36,7 @@
         app:layout_constraintBottom_toBottomOf="@+id/guidelinebottom"
         app:mt_roundedSearchBarEnabled="true"
         app:mt_hint="Search Users"
+
         app:mt_maxSuggestionsCount="10"
         app:mt_searchBarColor = "#f1f3f4"
         app:mt_placeholder="Search Users"

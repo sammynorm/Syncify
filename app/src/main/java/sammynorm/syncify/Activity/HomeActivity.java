@@ -1,9 +1,9 @@
 package sammynorm.syncify.Activity;
 
+import android.app.ActivityOptions;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -22,6 +22,7 @@ import java.util.List;
 
 import sammynorm.syncify.Model.FireBaseUtil;
 import sammynorm.syncify.R;
+import sammynorm.syncify.SpotifyDataManager.PlayerUpdates;
 import sammynorm.syncify.SpotifyDataManager.UserUpdates;
 import sammynorm.syncify.View.HomeView;
 
@@ -30,11 +31,10 @@ public class HomeActivity extends AppCompatActivity implements HomeView, Materia
     public static final String CLIENT_ID = "f71718e83a9e44cbb83869874d5f97c3";
     public static final String REDIRECT_URI = "sync-login://callback";
     private static final int REQUEST_CODE = 1337;
+    public static Thread t;
     public String accessToken;
     SharedPreferences settings;
     UserUpdates dm = new UserUpdates();
-    public static Thread t;
-
     private List<String> lastSearches;
 
     @Override
@@ -61,7 +61,9 @@ public class HomeActivity extends AppCompatActivity implements HomeView, Materia
 
     //LoginActivity Returns Success/Fail
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        super.onActivityResult(requestCode, resultCode, intent);
+        PlayerUpdates playerUpdates = PlayerUpdates.getInstance();
+
+                super.onActivityResult(requestCode, resultCode, intent);
 
         // Check if result comes from the correct activity
         if (requestCode == REQUEST_CODE) {
@@ -72,7 +74,8 @@ public class HomeActivity extends AppCompatActivity implements HomeView, Materia
                     //Check if user exists in UserUpdates/Firebase and Create if not
                     accessToken = response.getAccessToken();
                     dm.checkUserExists(accessToken, settings.getString("userName", null), this);
-
+                    //Start player remote
+                    playerUpdates.initialisePlayerAPI(this);
                     break;
 
                 // Auth flow returned an error
@@ -94,7 +97,7 @@ public class HomeActivity extends AppCompatActivity implements HomeView, Materia
 
     @Override
     public void onSearchConfirmed(final CharSequence text) {
-      //  new asyncCheck(this).execute(text.toString());
+        //  new asyncCheck(this).execute(text.toString());
         dm.subscribeToSearchedUser(this, text.toString(), settings.getString("userName", null));
 
     }
@@ -129,10 +132,11 @@ public class HomeActivity extends AppCompatActivity implements HomeView, Materia
     public void afterTextChanged(Editable s) {
     }
 
-    public void onUserExistsReceiver(Context context){
-
+    public void onUserExistsReceiver(Context context) {
         if (FireBaseUtil.doesUserExist) {
-            context.startActivity(new Intent(context, UserRoom.class));
+            ActivityOptions options = ActivityOptions.makeCustomAnimation(context,R.anim.nothing, R.anim.right_left);
+
+            context.startActivity(new Intent(context, UserRoom.class), options.toBundle());
         } else {
             System.out.println(FireBaseUtil.doesUserExist + "Doesnt exist ");
         }

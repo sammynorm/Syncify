@@ -11,7 +11,6 @@ public class User {
     boolean requestedUpdate;
 
 
-
     public User(String uid, String username, String accName, String imageURL, String songPlayingStr, boolean songState, long songTime, boolean requestedUpdate) {
         this.uid = uid;
         this.username = username;

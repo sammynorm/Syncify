@@ -29,4 +29,5 @@
     <string name="ArrowButton">ArrowButton</string>
     <string name="pick_a_username">Pick a Username!</string>
     <string name="welcome">Welcome!</string>
+    <string name="in_sync_with">"IN SYNC WITH"</string>
 </resources>

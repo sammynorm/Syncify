@@ -88,6 +88,7 @@ public class UserUpdates {
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             public void run() {
+                System.out.println(id);
                 playerUpdates.mySpotifyPlayerSubscription(id, context);
             }
         }, 5000);
@@ -100,13 +101,12 @@ public class UserUpdates {
     }
 
     public void subscribeToSearchedUser(Context context, String query, String username) {
-        if(!query.toLowerCase().equals(username.toLowerCase())) {
+        if (!query.toLowerCase().equals(username.toLowerCase())) {
             FireBaseUtil.subscribeToRemoteUserIfExists(context, query);
         }
     }
 
-    public void fireBaseUserNameCheckCallback(Context context)
-    {
+    public void fireBaseUserNameCheckCallback(Context context) {
         HomeActivity hm = new HomeActivity();
         hm.onUserExistsReceiver(context);
     }

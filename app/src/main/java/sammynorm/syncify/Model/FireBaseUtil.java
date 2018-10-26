@@ -11,6 +11,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.spotify.protocol.types.PlayerState;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,9 +25,8 @@ import sammynorm.syncify.SpotifyDataManager.UserUpdates;
 
 public class FireBaseUtil {
 
+    private static final CountDownLatch latch = new CountDownLatch(1);
     public static boolean doesUserExist;
-    private static final CountDownLatch latch = new CountDownLatch (1);
-
 
     private static void addUserToDB(String userName, String id, String accName, String imageURL) {
         FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
@@ -45,6 +45,7 @@ public class FireBaseUtil {
                     addUserToDB(userName, id, display_name, imageURI);
                 }
             }
+
             @Override
             public void onCancelled(DatabaseError databaseError) {
             }
@@ -96,6 +97,7 @@ public class FireBaseUtil {
                     }
                 }
             }
+
             @Override
             public void onCancelled(DatabaseError databaseError) {
             }
@@ -109,21 +111,22 @@ public class FireBaseUtil {
 
         ref.addChildEventListener(new ChildEventListener() {
             @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {}
+            public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
+            }
 
             @Override
             public void onChildChanged(final DataSnapshot dataSnapshot, String prevChildKey) {
                 ref.addListenerForSingleValueEvent(new ValueEventListener() {
                     public void onDataChange(DataSnapshot parent) {
                         User updatedUser = parent.getValue(User.class);
-                        if(!updatedUser.requestedUpdate) {
+                        if (!updatedUser.requestedUpdate) {
                             playerUpdates.setPlayBack(updatedUser);
-                        }
-                        else if(playerUpdates.firstCall) {
+                        } else if (playerUpdates.firstCall) {
                             System.out.println("First call line achieved");
                             playerUpdates.setPlayBack(updatedUser);
                             playerUpdates.firstCall = false;
-                        }}
+                        }
+                    }
 
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
@@ -132,9 +135,13 @@ public class FireBaseUtil {
             }
 
             @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) { }
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+            }
+
             @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String prevChildKey) { }
+            public void onChildMoved(DataSnapshot dataSnapshot, String prevChildKey) {
+            }
+
             @Override
             public void onCancelled(DatabaseError databaseError) {
             }
@@ -143,6 +150,7 @@ public class FireBaseUtil {
 
     public static void subscribeToRemoteUserIfExists(final Context context, final String username) {
         final DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference("userDetails");
+        final PlayerUpdates pu = PlayerUpdates.getInstance();
 
         final UserUpdates userUpdates = new UserUpdates();
         rootRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -151,31 +159,37 @@ public class FireBaseUtil {
                 for (DataSnapshot ds : dataSnapshot.getChildren()) {
                     if (Objects.requireNonNull(ds.child("username").getValue(String.class)).toLowerCase().equals(username.toLowerCase())) {
                         //This starts callback to start new activity, sets up remote user listener and forces remote user to update firebase details.
-                        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("userDetails/" + ds.getKey());
                         doesUserExist = true;
-                        remoteUserListener(ds.getKey());
-                        userUpdates.fireBaseUserNameCheckCallback(context);
+                        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("userDetails/" + ds.getKey());
+
+                        remoteUserListener(ds.getKey());//Send UID to remote listener
+                        userUpdates.fireBaseUserNameCheckCallback(context);//send context to callback to start another activity
+
+                        pu.connectedTo = ds.getValue(User.class);//Set ConnectedToUser details in PlayerUpdates
+
                         Map<String, Object> requestedUpdateBool = new HashMap<>();
                         requestedUpdateBool.put("requestedUpdate", true); //This lets other userapps know that it was a remote request and not a song change.
                         userRef.updateChildren(requestedUpdateBool);
-                    } else{
+                    } else {
                         doesUserExist = false;
                     }
                 }
             }
+
             @Override
-            public void onCancelled(DatabaseError databaseError) {}
+            public void onCancelled(DatabaseError databaseError) {
+            }
         });
     }
 
     //This is a listener to the USERS field, so when it changes this will observe and trigger a force refresh of the local users player
-    public static void addRequestObserver(String uid){
+    public static void addRequestObserver(String uid) {
         final DatabaseReference ref = FirebaseDatabase.getInstance().getReference("userDetails/" + uid + "/requestedUpdate");
         final PlayerUpdates playerUpdates = PlayerUpdates.getInstance();
         ref.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if(dataSnapshot.getValue().toString().equals("true")){
+                if (dataSnapshot.getValue().toString().equals("true")) {
                     playerUpdates.forceUpdateSongDetails(true);
                 }
             }
