@@ -11,7 +11,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.spotify.protocol.types.PlayerState;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,6 +26,8 @@ public class FireBaseUtil {
 
     private static final CountDownLatch latch = new CountDownLatch(1);
     public static boolean doesUserExist;
+    static PlayerUpdates playerUpdates;
+    private static ChildEventListener listener;
 
     private static void addUserToDB(String userName, String id, String accName, String imageURL) {
         FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
@@ -107,9 +108,10 @@ public class FireBaseUtil {
 
     private static void remoteUserListener(final String URI) {
         final DatabaseReference ref = FirebaseDatabase.getInstance().getReference("userDetails/" + URI);
-        final PlayerUpdates playerUpdates = PlayerUpdates.getInstance();
+        playerUpdates = PlayerUpdates.getInstance();
 
-        ref.addChildEventListener(new ChildEventListener() {
+
+        listener = ref.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
             }
@@ -122,7 +124,6 @@ public class FireBaseUtil {
                         if (!updatedUser.requestedUpdate) {
                             playerUpdates.setPlayBack(updatedUser);
                         } else if (playerUpdates.firstCall) {
-                            System.out.println("First call line achieved");
                             playerUpdates.setPlayBack(updatedUser);
                             playerUpdates.firstCall = false;
                         }
@@ -150,7 +151,7 @@ public class FireBaseUtil {
 
     public static void subscribeToRemoteUserIfExists(final Context context, final String username) {
         final DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference("userDetails");
-        final PlayerUpdates pu = PlayerUpdates.getInstance();
+        playerUpdates = PlayerUpdates.getInstance();
 
         final UserUpdates userUpdates = new UserUpdates();
         rootRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -165,7 +166,7 @@ public class FireBaseUtil {
                         remoteUserListener(ds.getKey());//Send UID to remote listener
                         userUpdates.fireBaseUserNameCheckCallback(context);//send context to callback to start another activity
 
-                        pu.connectedTo = ds.getValue(User.class);//Set ConnectedToUser details in PlayerUpdates
+                        playerUpdates.connectedTo = ds.getValue(User.class);//Set ConnectedToUser details in PlayerUpdates
 
                         Map<String, Object> requestedUpdateBool = new HashMap<>();
                         requestedUpdateBool.put("requestedUpdate", true); //This lets other userapps know that it was a remote request and not a song change.
@@ -182,7 +183,7 @@ public class FireBaseUtil {
         });
     }
 
-    //This is a listener to the USERS field, so when it changes this will observe and trigger a force refresh of the local users player
+    //This is a listener to the Hosts field, so when it changes this will observe and trigger a force refresh of the local users player
     public static void addRequestObserver(String uid) {
         final DatabaseReference ref = FirebaseDatabase.getInstance().getReference("userDetails/" + uid + "/requestedUpdate");
         final PlayerUpdates playerUpdates = PlayerUpdates.getInstance();
@@ -196,9 +197,15 @@ public class FireBaseUtil {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                System.out.println("The read failed: " + databaseError.getCode());
             }
         });
+    }
+
+    public static void clearRemoteUserListener(String userId) {
+        if (userId != null) {
+            final DatabaseReference ref = FirebaseDatabase.getInstance().getReference("userDetails/" + userId);//Need connectedUserURI
+            ref.removeEventListener(listener);
+        }
     }
 }
 

@@ -10,9 +10,11 @@ import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.spotify.protocol.client.CallResult;
 import com.spotify.protocol.client.ErrorCallback;
 import com.spotify.protocol.client.Subscription;
+import com.spotify.protocol.types.Empty;
 import com.spotify.protocol.types.PlayerState;
 
 import sammynorm.syncify.Activity.HomeActivity;
+import sammynorm.syncify.Activity.UserRoom;
 import sammynorm.syncify.Model.FireBaseUtil;
 import sammynorm.syncify.Model.User;
 
@@ -22,12 +24,14 @@ public class PlayerUpdates {
 
     private static final PlayerUpdates instance = new PlayerUpdates();
     public boolean firstCall = true;
-    public User connectedTo;
-    String id;
-    String songName;
-    private PlayerApi playerApi;
+    public boolean loggedIn;
+    public PlayerApi playerApi;
     public PlayerState playerStateCall;
+    public User connectedTo;
     public SpotifyAppRemote spotifyAppRemoteCall;
+    private Context context;
+    private String id;
+    private String songName;
     private String duplicateChecker;
     private ConnectionParams connectionParams =
             new ConnectionParams.Builder(HomeActivity.CLIENT_ID)
@@ -45,32 +49,34 @@ public class PlayerUpdates {
     //Feeds data to Firebase
     public void mySpotifyPlayerSubscription(final String id, Context context) {
         this.id = id;
-        FireBaseUtil.addRequestObserver(id);;
-                        //Instantiate PlayerState since player may not set in time.
-                        playerApi.subscribeToPlayerState().setEventCallback(new Subscription.EventCallback<PlayerState>() {
-                                    @Override
-                                    public void onEvent(PlayerState playerState) {
-                                        playerStateCall = playerState;
-                                        System.out.println(playerState.track.name);
-                                        //Create method for Posting Song details to Firebase
-                                        //Also prevent duplicate entries for firebase
-                                        if (!playerState.toString().equals(duplicateChecker)) {
-                                            duplicateChecker = playerState.toString();
-                                            //Remove extra character
-                                            FireBaseUtil.updateFireBaseSongInfo(id, playerState.track.uri, playerState.playbackPosition, playerState.isPaused, false);
-                                        }
-                                    }
-                                })
-                                .setErrorCallback(new ErrorCallback() {
-                                    @Override
-                                    public void onError(Throwable throwable) {
-                                        Log.d(TAG, throwable.getMessage());
-                                    }
-                                });
+        this.context = context;
+        FireBaseUtil.addRequestObserver(id);
+        //Instantiate PlayerState since player may not set in time.
+        playerApi.subscribeToPlayerState().setEventCallback(new Subscription.EventCallback<PlayerState>() {
+            @Override
+            public void onEvent(PlayerState playerState) {
+                playerStateCall = playerState;
+                //Create method for Posting Song details to Firebase
+                //Also prevent duplicate entries for firebase
+                if (!playerState.toString().equals(duplicateChecker)) {
+                    duplicateChecker = playerState.toString();
+                    //Remove extra character
+                    FireBaseUtil.updateFireBaseSongInfo(id, playerState.track.uri, playerState.playbackPosition, playerState.isPaused, false);
+                }
+            }
+        })
+                .setErrorCallback(new ErrorCallback() {
+                    @Override
+                    public void onError(Throwable throwable) {
+                        Log.d(TAG, throwable.getMessage());
+                    }
+                });
     }
+
 
     //Receives data from firebase
     public void setPlayBack(User user) {
+        connectedTo = user;
         boolean isSongAlreadyLoaded = false;
         if (songName != null && songName.equals(user.getSongPlayingStr())) { // <-- logic for making sure song doesn't play a little bit of the start
             isSongAlreadyLoaded = true;
@@ -84,15 +90,19 @@ public class PlayerUpdates {
             if (isPaused) {
                 playerApi.pause();
                 playerApi.seekTo(songTime);
-
+                ((UserRoom) context).updateElapsedTimeUI(songTime);
+                ((UserRoom) context).updatePauseStateUI(true);
             } else {
                 playerApi.seekTo(songTime);
                 playerApi.resume();
+                ((UserRoom) context).updateElapsedTimeUI(songTime);
+                ((UserRoom) context).updatePauseStateUI(false);
+
             }
         } else {
-            playerApi.play(songName).setResultCallback(new CallResult.ResultCallback() {
+            playerApi.play(songName).setResultCallback(new CallResult.ResultCallback<Empty>() {
                 @Override
-                public void onResult(Object o) {
+                public void onResult(Empty empty) {
                     if (isPaused) {
                         playerApi.pause();
                         playerApi.seekTo(songTime);
@@ -101,25 +111,19 @@ public class PlayerUpdates {
                         playerApi.resume();
                         playerApi.seekTo(songTime);
                     }
+                    ((UserRoom) context).updateSongUI();
                 }
-            }).setErrorCallback(new ErrorCallback() {
-                        @Override
-                        public void onError(Throwable throwable) {
-                            // =(
-                        }
-                    });
+
+            });
         }
     }
 
-    public void initialisePlayerAPI(Context context){
-        System.out.println("TEST1");
+    public void initialisePlayerAPI(Context context) {
         SpotifyAppRemote.connect(context, connectionParams,
                 new Connector.ConnectionListener() {
                     @Override
                     public void onConnected(final SpotifyAppRemote spotifyAppRemote) {
                         spotifyAppRemoteCall = spotifyAppRemote;
-                        System.out.println("TEST2");
-
                         playerApi = spotifyAppRemote.getPlayerApi();
                         playerApi.getPlayerState().setResultCallback(new CallResult.ResultCallback<PlayerState>() {
                             @Override
@@ -136,7 +140,7 @@ public class PlayerUpdates {
                 });
     }
 
-                    public void forceUpdateSongDetails(final boolean wasRemoteUserRequest) {
+    public void forceUpdateSongDetails(final boolean wasRemoteUserRequest) {
         playerApi.getPlayerState()
                 .setResultCallback(new CallResult.ResultCallback<PlayerState>() {
                     @Override
@@ -151,4 +155,15 @@ public class PlayerUpdates {
                     }
                 });
     }
+
+    public void setContext(Context context) {
+        this.context = context;
+    }
+
+    public void resetListeners(String userId) {
+        FireBaseUtil.clearRemoteUserListener(userId);
+        connectedTo = null;
+        firstCall = true;
+    }
+
 }

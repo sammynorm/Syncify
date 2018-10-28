@@ -88,10 +88,9 @@ public class UserUpdates {
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             public void run() {
-                System.out.println(id);
                 playerUpdates.mySpotifyPlayerSubscription(id, context);
             }
-        }, 5000);
+        }, 1000);
     }
 
 

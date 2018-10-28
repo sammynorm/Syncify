@@ -10,6 +10,19 @@ public class User {
     long songTime;
     boolean requestedUpdate;
 
+    @Override
+    public String toString() {
+        return "User{" +
+                "uid='" + uid + '\'' +
+                ", username='" + username + '\'' +
+                ", accName='" + accName + '\'' +
+                ", imageURL='" + imageURL + '\'' +
+                ", songPlayingStr='" + songPlayingStr + '\'' +
+                ", songState=" + songState +
+                ", songTime=" + songTime +
+                ", requestedUpdate=" + requestedUpdate +
+                '}';
+    }
 
     public User(String uid, String username, String accName, String imageURL, String songPlayingStr, boolean songState, long songTime, boolean requestedUpdate) {
         this.uid = uid;
