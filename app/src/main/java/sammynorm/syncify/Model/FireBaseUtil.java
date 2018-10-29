@@ -25,7 +25,7 @@ import sammynorm.syncify.SpotifyDataManager.UserUpdates;
 
 public class FireBaseUtil {
 
-    private static final CountDownLatch latch = new CountDownLatch(1);
+
     public static boolean doesUserExist;
     static PlayerUpdates playerUpdates;
     private static ChildEventListener listener;
@@ -138,15 +138,9 @@ public class FireBaseUtil {
                         if (!updatedUser.requestedUpdate) {
                             playerUpdates.setPlayBack(updatedUser);
                         } else if (playerUpdates.firstCall) {
-                            Handler handler = new Handler();
-                            handler.postDelayed(new Runnable() {
-                                public void run() {
-                                    System.out.println("Running through else if");
-                                    playerUpdates.setPlayBack(updatedUser);
-                                    playerUpdates.firstCall = false;
-                                }
-                            }, 200);}
+                            playerUpdates.setPlayBack(updatedUser);
                         }
+                    }
 
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
@@ -203,15 +197,24 @@ public class FireBaseUtil {
     }
 
     //This is a listener to the Hosts field, so when it changes this will observe and trigger a force refresh of the local users player
-    public static void addRequestObserver(String uid) {
+    public static void addRequestObserver(final String uid) {
         final DatabaseReference ref = FirebaseDatabase.getInstance().getReference("userDetails/" + uid + "/requestedUpdate");
-        System.out.println(uid);
         final PlayerUpdates playerUpdates = PlayerUpdates.getInstance();
         ref.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.getValue().toString().equals("true")) {
-                    playerUpdates.forceUpdateSongDetails(true);
+                if(dataSnapshot.getValue()!=null) {
+                    if (dataSnapshot.getValue().toString().equals("true")) {
+                        Handler handler = new Handler();
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                playerUpdates.forceUpdateSongDetails(true);
+                            }
+                        }, 50);
+                    }
+                } else{
+                    addRequestObserver(uid);
                 }
             }
 

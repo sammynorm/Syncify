@@ -13,6 +13,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.spotify.android.appremote.api.ImagesApi;
@@ -45,6 +46,9 @@ public class UserRoom extends AppCompatActivity {
     Long totalTimeLong;
     Timer timer;
     String connectedToID;
+    Boolean firstUpdate = true;
+    ProgressBar spinner;
+
 
 
     @Override
@@ -64,6 +68,7 @@ public class UserRoom extends AppCompatActivity {
         elapsedTimeTxtView = findViewById(R.id.timeElapsed);
         totalTimeTxtView = findViewById(R.id.timeTotal);
         signSeekBar = findViewById(R.id.seek_bar);
+        spinner = findViewById(R.id.loadingCircle);
 
         imagesApi = playerUpdates.spotifyAppRemoteCall.getImagesApi();
         setupToolbar();
@@ -80,7 +85,6 @@ public class UserRoom extends AppCompatActivity {
         });
     }
 
-
     public void setupToolbar() {
         PlayerUpdates playerUpdates = PlayerUpdates.getInstance();
         getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.colorPrimary));
@@ -93,20 +97,23 @@ public class UserRoom extends AppCompatActivity {
     }
 
     public void setView() {
-        elapsedTimeLong = playerState.playbackPosition;
-                totalTimeLong = playerState.track.duration;
-                float progress = ((float) elapsedTimeLong / totalTimeLong) * 100;
 
-                elapsedTimeTxtView.setText(convertToMinutes(elapsedTimeLong));
-                totalTimeTxtView.setText(convertToMinutes(totalTimeLong));
-                songName.setText(playerState.track.name);
-                artistName.setText((playerState.track.artist.name));
-                signSeekBar.setProgress(progress);
+        if(!playerUpdates.firstCall) {
+            elapsedTimeLong = playerState.playbackPosition;
+            totalTimeLong = playerState.track.duration;
+            float progress = ((float) elapsedTimeLong / totalTimeLong) * 100;
+            elapsedTimeTxtView.setText(convertToMinutes(elapsedTimeLong));
+            totalTimeTxtView.setText(convertToMinutes(totalTimeLong));
 
-                if (!playerState.isPaused) {
-                    startSeekBarMovement();
-                }
-                setImage();
+            songName.setText(playerState.track.name);
+            artistName.setText((playerState.track.artist.name));
+            signSeekBar.setProgress(progress);
+
+            if (!playerState.isPaused) {
+                startSeekBarMovement();
+            }
+            setImage();
+        }
     }
 
         public void setImage() {
@@ -118,6 +125,7 @@ public class UserRoom extends AppCompatActivity {
                             .setResultCallback(new CallResult.ResultCallback<Bitmap>() {
                                 @Override
                                 public void onResult(Bitmap bitmap) {
+                                    spinner.setVisibility(View.GONE);
                                     imageView.setImageBitmap(bitmap);
                                     userName.setText(playerUpdates.connectedTo.getUserName());
                                 }});
@@ -138,6 +146,7 @@ public class UserRoom extends AppCompatActivity {
                 elapsedTimeLong += 100;
                 setElapsedTimeTxtView(elapsedTimeLong);
                 signSeekBar.setProgress(getSeekBarProgress());
+                uiUpdateForce();
             }
         }, 100, 100);
     }
@@ -170,6 +179,11 @@ public class UserRoom extends AppCompatActivity {
         }
     }
 
+    public void firstUpdateDelay(){
+        uiUpdateForce();
+        playerUpdates.firstCall = false;
+    }
+
     @Override
     protected void onPause() {
         super.onPause();
@@ -183,25 +197,6 @@ public class UserRoom extends AppCompatActivity {
     protected void onDestroy(){
         super.onDestroy();
         playerUpdates.resetListeners(connectedToID);
-    }
-
-    public void updateElapsedTimeUI(long songTime) {
-        elapsedTimeLong = songTime;
-        elapsedTimeTxtView.setText(convertToMinutes(songTime));
-        signSeekBar.setProgress(getSeekBarProgress());
-    }
-
-    public void updateSongUI() {
-        timer.cancel();
-        uiUpdateForce();
-    }
-
-    public void updatePauseStateUI(boolean isPaused) {
-        if (isPaused&&timer!=null) {
-                timer.cancel();
-        } else {
-            startSeekBarMovement();
-        }
     }
 
     @SuppressLint("DefaultLocale")//Always integers so this is irrelevant
@@ -220,9 +215,7 @@ public class UserRoom extends AppCompatActivity {
                     playerState = playerStateNew;
                 }
             });
-
             return "Executed";
-
         }
 
         @Override

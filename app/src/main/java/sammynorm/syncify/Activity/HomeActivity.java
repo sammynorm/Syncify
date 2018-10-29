@@ -43,7 +43,7 @@ public class HomeActivity extends AppCompatActivity implements HomeView, Materia
         playerUpdates = PlayerUpdates.getInstance();
         settings = getSharedPreferences("MyPrefsFile", 0);
         setupToolbar();
-        if (playerUpdates.loggedIn==false) {
+        if (!playerUpdates.loggedIn) {
             startLogin();
          }
 
@@ -69,19 +69,14 @@ public class HomeActivity extends AppCompatActivity implements HomeView, Materia
     //LoginActivity Returns Success/Fail
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
-
-        // Check if result comes from the correct activity
         if (requestCode == REQUEST_CODE) {
             AuthenticationResponse response = AuthenticationClient.getResponse(resultCode, intent);
             switch (response.getType()) {
-                // Response was successful and contains auth token
                 case TOKEN:
-                    //Check if user exists in UserUpdates/Firebase and Create if not
                     playerUpdates.loggedIn = true;
                     setAccessToken(response.getAccessToken());
                     dm.checkUserExists(accessToken, settings.getString("userName", null), this);
                     settings.edit().putBoolean("isLoggedIn", true).apply();
-                    //Start player remote
                     break;
                 case ERROR:
                     System.exit(0);

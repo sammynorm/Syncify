@@ -13,6 +13,8 @@ import com.spotify.protocol.client.Subscription;
 import com.spotify.protocol.types.Empty;
 import com.spotify.protocol.types.PlayerState;
 
+import java.util.logging.Handler;
+
 import sammynorm.syncify.Activity.HomeActivity;
 import sammynorm.syncify.Activity.UserRoom;
 import sammynorm.syncify.Model.FireBaseUtil;
@@ -80,6 +82,7 @@ public class PlayerUpdates {
         connectedTo = user;
         boolean isSongAlreadyLoaded = false;
 
+
         if (songName != null && songName.equals(user.getSongPlayingStr())) { // <-- logic for making sure song doesn't play a little bit of the start
             isSongAlreadyLoaded = true;
         } else {
@@ -92,13 +95,13 @@ public class PlayerUpdates {
             if (isPaused) {
                 playerApi.pause();
                 playerApi.seekTo(songTime);
-                ((UserRoom) context).updateElapsedTimeUI(songTime);
-                ((UserRoom) context).updatePauseStateUI(true);
+
             } else {
                 playerApi.seekTo(songTime);
                 playerApi.resume();
-                ((UserRoom) context).updateElapsedTimeUI(songTime);
-                ((UserRoom) context).updatePauseStateUI(false);
+            }
+            if(firstCall){
+                ((UserRoom) context).firstUpdateDelay();
             }
         } else {
             playerApi.play(songName).setResultCallback(new CallResult.ResultCallback<Empty>() {
@@ -107,16 +110,22 @@ public class PlayerUpdates {
                     if (isPaused) {
                         playerApi.pause();
                         playerApi.seekTo(songTime);
+
                     } else {
                         playerApi.resume();
                         playerApi.seekTo(songTime);
                     }
-                    ((UserRoom) context).updateElapsedTimeUI(songTime);
-                    ((UserRoom) context).updateSongUI();
+                    if(firstCall){
+                        System.out.println("Got to firstUpdateDelay");
+                        ((UserRoom) context).firstUpdateDelay();
+                    }
                 }
 
-            });
+            }
+            );
         }
+        ((UserRoom) context).uiUpdateForce();
+
     }
 
     public void initialisePlayerAPI(Context context) {
