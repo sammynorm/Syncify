@@ -2,19 +2,20 @@ package sammynorm.syncify.Model;
 
 public class User {
     String uid;
-    String username;
+    String userName;
     String accName;
     String imageURL;
     String songPlayingStr;
     boolean songState;
     long songTime;
+    String songImageURI;
     boolean requestedUpdate;
 
     @Override
     public String toString() {
         return "User{" +
                 "uid='" + uid + '\'' +
-                ", username='" + username + '\'' +
+                ", userName='" + userName + '\'' +
                 ", accName='" + accName + '\'' +
                 ", imageURL='" + imageURL + '\'' +
                 ", songPlayingStr='" + songPlayingStr + '\'' +
@@ -24,18 +25,28 @@ public class User {
                 '}';
     }
 
-    public User(String uid, String username, String accName, String imageURL, String songPlayingStr, boolean songState, long songTime, boolean requestedUpdate) {
+    public User(String uid, String userName, String accName, String imageURL, String songPlayingStr, boolean songState, long songTime,String songImageURI, boolean requestedUpdate) {
         this.uid = uid;
-        this.username = username;
+        this.userName = userName;
         this.accName = accName;
         this.imageURL = imageURL;
         this.songPlayingStr = songPlayingStr;
         this.songState = songState;
         this.songTime = songTime;
+        this.songImageURI = songImageURI;
         this.requestedUpdate = requestedUpdate;
     }
 
+    public String getSongImageURI() {
+        return songImageURI;
+    }
+
+    public void setSongImageURI(String songImageURI) {
+        this.songImageURI = songImageURI;
+    }
+
     public User() {
+
     }
 
     public String getUid() {
@@ -46,12 +57,12 @@ public class User {
         this.uid = uid;
     }
 
-    public String getUsername() {
-        return username;
+    public String getUserName() {
+        return userName;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
     public String getAccName() {

@@ -43,9 +43,10 @@ public class HomeActivity extends AppCompatActivity implements HomeView, Materia
         playerUpdates = PlayerUpdates.getInstance();
         settings = getSharedPreferences("MyPrefsFile", 0);
         setupToolbar();
-        if (!playerUpdates.loggedIn) {
+        if (playerUpdates.loggedIn==false) {
             startLogin();
-        }
+         }
+
         MaterialSearchBar searchBar = findViewById(R.id.searchBar);
         searchBar.setOnSearchActionListener(this);
         searchBar.addTextChangeListener(this);
@@ -79,6 +80,7 @@ public class HomeActivity extends AppCompatActivity implements HomeView, Materia
                     playerUpdates.loggedIn = true;
                     setAccessToken(response.getAccessToken());
                     dm.checkUserExists(accessToken, settings.getString("userName", null), this);
+                    settings.edit().putBoolean("isLoggedIn", true).apply();
                     //Start player remote
                     break;
                 case ERROR:

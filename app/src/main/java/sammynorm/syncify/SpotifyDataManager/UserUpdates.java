@@ -26,6 +26,8 @@ public class UserUpdates {
     private final OkHttpClient mOkHttpClient = new OkHttpClient();
     public String id;
     private Call mCall;
+    JSONObject jsonObject;
+    JSONObject jsonImageURL;
 
 
     public void checkUserExists(String mAccessToken, final String userName, Context context) {
@@ -52,26 +54,32 @@ public class UserUpdates {
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 try {
                     //2 Json Objects because there are nested json items in here :/
-                    final JSONObject jsonObject;
-                    final JSONObject jsonImageURL;
 
                     jsonObject = new JSONObject(response.body().string());
+                    String str;
 
                     //cant be converted to json without removing these brackets
-                    String str = jsonObject.getString("images");
-                    str = str.replace("[", "");
-                    str = str.replace("]", "");
-                    jsonImageURL = new JSONObject(str);
+                        str = jsonObject.getString("images");
+                        str = str.replace("[", "");
+                        str = str.replace("]", "");
+                    if(str.equals("")){
+                        str = "null!";
+                    } else {
+                        jsonImageURL = new JSONObject(str);
+                        str = jsonImageURL.getString("url");
+                    }
 
                     //Set ID for Subscription
                     setId(jsonObject.getString("id"));
-                    FireBaseUtil.doesUserExistByID(jsonObject.getString("id"), userName, jsonObject.getString("display_name"), jsonImageURL.getString("url"));
+                    System.out.println("DoesUserExistbyID");
+                    FireBaseUtil.doesUserExistByID(jsonObject.getString("id"), userName, jsonObject.getString("display_name"), str);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
         });
         //Maybe change this later -- It only is here because it's functions run faster and ends up running with no ID
+        System.out.println("setScriberOn");
         setSubscriberOn(context);
     }
 

@@ -1,6 +1,7 @@
 package sammynorm.syncify.Model;
 
 import android.content.Context;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 
 import com.google.android.gms.tasks.OnFailureListener;
@@ -31,10 +32,21 @@ public class FireBaseUtil {
 
     private static void addUserToDB(String userName, String id, String accName, String imageURL) {
         FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
-        Map<String, User> users = new HashMap<>();
-        DatabaseReference myRef = mDatabase.getReference("userDetails");
-        users.put(id, new User(id, userName, accName, imageURL, null, true, 0, false));
-        myRef.setValue(users);
+
+        Map<String, Object> uidMap = new HashMap<>();
+        Map<String, Object> user = new HashMap<>();
+        DatabaseReference myRef = mDatabase.getReference();
+        uidMap.put("userDetails", id);
+        user.put("id", id);
+        user.put("userName", userName);
+        user.put("accName", accName);
+        user.put("imageUrl", imageURL);
+        user.put("songPlayingStr", null);
+        user.put("songState", true);
+        user.put("songTime", 0);
+        user.put("requestedUpdate", false);
+        myRef.push().setValue(uidMap);
+        myRef.child("userDetails/" + id).updateChildren(user);
     }
 
     public static void doesUserExistByID(final String id, final String userName, final String display_name, final String imageURI) {
@@ -43,7 +55,10 @@ public class FireBaseUtil {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (!dataSnapshot.hasChild(id)) {
+                        addUserToDB(userName, id, display_name, imageURI);
+                    }else if(!dataSnapshot.child(id).hasChild("userName")) {
                     addUserToDB(userName, id, display_name, imageURI);
+                    System.out.println("hasnt got child..");
                 }
             }
 
@@ -55,15 +70,15 @@ public class FireBaseUtil {
 
     //Needs UserID as reference, only thing that matters is songpos,songuri,isPaused?
     //updates Songinfo to FIREBASE
-    public static void updateFireBaseSongInfo(String userid, String uri, long songPosition, boolean songState, boolean wasRemoteUserRequest) {
+    public static void updateFireBaseSongInfo(String userid, String uri, long songPosition, boolean songState, String songImageURI, boolean wasRemoteUserRequest) {
         final double initialTime = System.nanoTime();
-
         DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
 
         Map<String, Object> songDetails = new HashMap<>();
         songDetails.put("songPlayingStr", uri);
         songDetails.put("songState", songState);
         songDetails.put("songTime", songPosition);
+        songDetails.put("songImageURI", songImageURI);
         songDetails.put("requestedUpdate", wasRemoteUserRequest);
 
         mDatabase.child("userDetails").child(userid).updateChildren(songDetails)
@@ -110,7 +125,6 @@ public class FireBaseUtil {
         final DatabaseReference ref = FirebaseDatabase.getInstance().getReference("userDetails/" + URI);
         playerUpdates = PlayerUpdates.getInstance();
 
-
         listener = ref.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
@@ -120,14 +134,19 @@ public class FireBaseUtil {
             public void onChildChanged(final DataSnapshot dataSnapshot, String prevChildKey) {
                 ref.addListenerForSingleValueEvent(new ValueEventListener() {
                     public void onDataChange(DataSnapshot parent) {
-                        User updatedUser = parent.getValue(User.class);
+                        final User updatedUser = parent.getValue(User.class);
                         if (!updatedUser.requestedUpdate) {
                             playerUpdates.setPlayBack(updatedUser);
                         } else if (playerUpdates.firstCall) {
-                            playerUpdates.setPlayBack(updatedUser);
-                            playerUpdates.firstCall = false;
+                            Handler handler = new Handler();
+                            handler.postDelayed(new Runnable() {
+                                public void run() {
+                                    System.out.println("Running through else if");
+                                    playerUpdates.setPlayBack(updatedUser);
+                                    playerUpdates.firstCall = false;
+                                }
+                            }, 200);}
                         }
-                    }
 
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
@@ -158,7 +177,7 @@ public class FireBaseUtil {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot ds : dataSnapshot.getChildren()) {
-                    if (Objects.requireNonNull(ds.child("username").getValue(String.class)).toLowerCase().equals(username.toLowerCase())) {
+                    if (ds.child("userName").getValue(String.class).toLowerCase().equals(username.toLowerCase())) {
                         //This starts callback to start new activity, sets up remote user listener and forces remote user to update firebase details.
                         doesUserExist = true;
                         DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("userDetails/" + ds.getKey());
@@ -186,6 +205,7 @@ public class FireBaseUtil {
     //This is a listener to the Hosts field, so when it changes this will observe and trigger a force refresh of the local users player
     public static void addRequestObserver(String uid) {
         final DatabaseReference ref = FirebaseDatabase.getInstance().getReference("userDetails/" + uid + "/requestedUpdate");
+        System.out.println(uid);
         final PlayerUpdates playerUpdates = PlayerUpdates.getInstance();
         ref.addValueEventListener(new ValueEventListener() {
             @Override

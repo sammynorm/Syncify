@@ -15,6 +15,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.spotify.android.appremote.api.ImagesApi;
 import com.spotify.protocol.client.CallResult;
 import com.spotify.protocol.types.PlayerState;
 import com.zhouyou.view.seekbar.SignSeekBar;
@@ -38,6 +39,7 @@ public class UserRoom extends AppCompatActivity {
     ImageView exitBtn;
     PlayerState playerState;
     PlayerUpdates playerUpdates;
+    ImagesApi imagesApi;
     Boolean activityActive;
     Long elapsedTimeLong;
     Long totalTimeLong;
@@ -53,6 +55,7 @@ public class UserRoom extends AppCompatActivity {
         playerUpdates = PlayerUpdates.getInstance();
         playerState = playerUpdates.playerStateCall;
         playerUpdates.setContext(this);
+        playerUpdates.initialisePlayerAPI(this);
         imageView = findViewById(R.id.imageView);
         userName = findViewById(R.id.toolbar_titleUserName);
         songName = findViewById(R.id.songNametxtView);
@@ -61,6 +64,8 @@ public class UserRoom extends AppCompatActivity {
         elapsedTimeTxtView = findViewById(R.id.timeElapsed);
         totalTimeTxtView = findViewById(R.id.timeTotal);
         signSeekBar = findViewById(R.id.seek_bar);
+
+        imagesApi = playerUpdates.spotifyAppRemoteCall.getImagesApi();
         setupToolbar();
 
         exitBtn.setOnClickListener(new View.OnClickListener() {
@@ -82,35 +87,44 @@ public class UserRoom extends AppCompatActivity {
         View v = getLayoutInflater().inflate(R.layout.activity_user_roomv2, null);
         Toolbar myToolbar = v.findViewById(R.id.toolbar);
         TextView txtview = findViewById(R.id.toolbar_titleUserName);
-        txtview.setText(playerUpdates.connectedTo.getUsername());
+        txtview.setText(playerUpdates.connectedTo.getUserName());
         connectedToID = playerUpdates.connectedTo.getUid();
         setSupportActionBar(myToolbar);
     }
 
     public void setView() {
         elapsedTimeLong = playerState.playbackPosition;
-        totalTimeLong = playerState.track.duration;
-        float progress = ((float) elapsedTimeLong / totalTimeLong) * 100;
+                totalTimeLong = playerState.track.duration;
+                float progress = ((float) elapsedTimeLong / totalTimeLong) * 100;
 
-        elapsedTimeTxtView.setText(convertToMinutes(elapsedTimeLong));
-        totalTimeTxtView.setText(convertToMinutes(totalTimeLong));
-        songName.setText(playerState.track.name);
-        artistName.setText((playerState.track.artist.name));
-        signSeekBar.setProgress(progress);
+                elapsedTimeTxtView.setText(convertToMinutes(elapsedTimeLong));
+                totalTimeTxtView.setText(convertToMinutes(totalTimeLong));
+                songName.setText(playerState.track.name);
+                artistName.setText((playerState.track.artist.name));
+                signSeekBar.setProgress(progress);
 
-        if (!playerState.isPaused) {
-            startSeekBarMovement();
-        }
+                if (!playerState.isPaused) {
+                    startSeekBarMovement();
+                }
+                setImage();
+    }
 
-        playerUpdates.spotifyAppRemoteCall.getImagesApi()
-                .getImage(playerState.track.imageUri)
-                .setResultCallback(new CallResult.ResultCallback<Bitmap>() {
-                    @Override
-                    public void onResult(Bitmap bitmap) {
-                        imageView.setImageBitmap(bitmap);
-                        userName.setText(playerUpdates.connectedTo.getUsername());
-                    }
-                });
+        public void setImage() {
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            public void run() {
+                if(playerState.track.imageUri!=null) {
+                    imagesApi.getImage(playerState.track.imageUri)
+                            .setResultCallback(new CallResult.ResultCallback<Bitmap>() {
+                                @Override
+                                public void onResult(Bitmap bitmap) {
+                                    imageView.setImageBitmap(bitmap);
+                                    userName.setText(playerUpdates.connectedTo.getUserName());
+                                }});
+                }
+                else{
+                    setImage();
+                } }}, 5);
     }
 
     public void startSeekBarMovement() {
@@ -165,6 +179,12 @@ public class UserRoom extends AppCompatActivity {
         activityActive = false;
     }
 
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        playerUpdates.resetListeners(connectedToID);
+    }
+
     public void updateElapsedTimeUI(long songTime) {
         elapsedTimeLong = songTime;
         elapsedTimeTxtView.setText(convertToMinutes(songTime));
@@ -177,8 +197,8 @@ public class UserRoom extends AppCompatActivity {
     }
 
     public void updatePauseStateUI(boolean isPaused) {
-        if (isPaused) {
-            timer.cancel();
+        if (isPaused&&timer!=null) {
+                timer.cancel();
         } else {
             startSeekBarMovement();
         }

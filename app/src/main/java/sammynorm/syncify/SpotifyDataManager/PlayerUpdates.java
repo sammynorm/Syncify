@@ -24,7 +24,7 @@ public class PlayerUpdates {
 
     private static final PlayerUpdates instance = new PlayerUpdates();
     public boolean firstCall = true;
-    public boolean loggedIn;
+    public boolean loggedIn = false;
     public PlayerApi playerApi;
     public PlayerState playerStateCall;
     public User connectedTo;
@@ -61,7 +61,8 @@ public class PlayerUpdates {
                 if (!playerState.toString().equals(duplicateChecker)) {
                     duplicateChecker = playerState.toString();
                     //Remove extra character
-                    FireBaseUtil.updateFireBaseSongInfo(id, playerState.track.uri, playerState.playbackPosition, playerState.isPaused, false);
+
+                    FireBaseUtil.updateFireBaseSongInfo(id, playerState.track.uri, playerState.playbackPosition, playerState.isPaused, playerState.track.imageUri.raw, false);
                 }
             }
         })
@@ -78,6 +79,7 @@ public class PlayerUpdates {
     public void setPlayBack(User user) {
         connectedTo = user;
         boolean isSongAlreadyLoaded = false;
+
         if (songName != null && songName.equals(user.getSongPlayingStr())) { // <-- logic for making sure song doesn't play a little bit of the start
             isSongAlreadyLoaded = true;
         } else {
@@ -97,7 +99,6 @@ public class PlayerUpdates {
                 playerApi.resume();
                 ((UserRoom) context).updateElapsedTimeUI(songTime);
                 ((UserRoom) context).updatePauseStateUI(false);
-
             }
         } else {
             playerApi.play(songName).setResultCallback(new CallResult.ResultCallback<Empty>() {
@@ -106,11 +107,11 @@ public class PlayerUpdates {
                     if (isPaused) {
                         playerApi.pause();
                         playerApi.seekTo(songTime);
-
                     } else {
                         playerApi.resume();
                         playerApi.seekTo(songTime);
                     }
+                    ((UserRoom) context).updateElapsedTimeUI(songTime);
                     ((UserRoom) context).updateSongUI();
                 }
 
@@ -145,7 +146,7 @@ public class PlayerUpdates {
                 .setResultCallback(new CallResult.ResultCallback<PlayerState>() {
                     @Override
                     public void onResult(PlayerState playerState) {
-                        FireBaseUtil.updateFireBaseSongInfo(id, playerState.track.uri, playerState.playbackPosition, playerState.isPaused, wasRemoteUserRequest);
+                        FireBaseUtil.updateFireBaseSongInfo(id, playerState.track.uri, playerState.playbackPosition, playerState.isPaused, playerState.track.imageUri.raw, wasRemoteUserRequest);
                     }
                 })
                 .setErrorCallback(new ErrorCallback() {
