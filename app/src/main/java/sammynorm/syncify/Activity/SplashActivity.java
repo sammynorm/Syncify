@@ -11,17 +11,20 @@ import android.support.v7.app.AppCompatActivity;
  */
 public class SplashActivity extends AppCompatActivity {
 
+
+    //TO add animation when completed
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         final String PREFS_NAME = "MyPrefsFile";
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-        String username = settings.getString("userName", null);
-        if (username != null) {
+        String username = settings.getString("userName", "");
+        System.out.println(username);
+        if (username != "") {
             Intent intent = new Intent(this, HomeActivity.class);
             startActivity(intent);
             finish();
-        } else if (username == null) {
+        } else if (username == "") {
             Intent i = new Intent(this, UserNameSelect.class);
             startActivity(i);
         }
