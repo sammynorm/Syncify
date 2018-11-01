@@ -29,7 +29,7 @@ public class PlayerUpdates {
     public boolean loggedIn = false;
     public PlayerApi playerApi;
     public PlayerState playerStateCall;
-    public User connectedTo;
+    public User connectedToUser;
     public SpotifyAppRemote spotifyAppRemoteCall;
     private Context context;
     private String id;
@@ -41,11 +41,31 @@ public class PlayerUpdates {
                     .showAuthView(true)
                     .build();
 
-    private PlayerUpdates() {
-    }
+    private PlayerUpdates() { }
 
     public static PlayerUpdates getInstance() {
         return instance;
+    }
+
+    public void initialisePlayerAPI(Context context) {
+        SpotifyAppRemote.connect(context, connectionParams,
+                new Connector.ConnectionListener() {
+                    @Override
+                    public void onConnected(final SpotifyAppRemote spotifyAppRemote) {
+                        spotifyAppRemoteCall = spotifyAppRemote;
+                        playerApi = spotifyAppRemote.getPlayerApi();
+                        playerApi.getPlayerState().setResultCallback(new CallResult.ResultCallback<PlayerState>() {
+                            @Override
+                            public void onResult(PlayerState playerState) {
+                                playerStateCall = playerState;
+                            }
+                        });
+                    }
+                    @Override
+                    public void onFailure(Throwable throwable) {
+
+                    }
+                });
     }
 
     //Feeds data to Firebase
@@ -76,12 +96,10 @@ public class PlayerUpdates {
                 });
     }
 
-
     //Receives data from firebase
     public void setPlayBack(User user) {
-        connectedTo = user;
+        connectedToUser = user;
         boolean isSongAlreadyLoaded = false;
-
 
         if (songName != null && songName.equals(user.getSongPlayingStr())) { // <-- logic for making sure song doesn't play a little bit of the start
             isSongAlreadyLoaded = true;
@@ -124,31 +142,9 @@ public class PlayerUpdates {
             }
             );
         }
-        ((UserRoom) context).uiUpdateForce();
-
+        ((UserRoom) context).forceUpdateUI();
     }
 
-    public void initialisePlayerAPI(Context context) {
-        SpotifyAppRemote.connect(context, connectionParams,
-                new Connector.ConnectionListener() {
-                    @Override
-                    public void onConnected(final SpotifyAppRemote spotifyAppRemote) {
-                        spotifyAppRemoteCall = spotifyAppRemote;
-                        playerApi = spotifyAppRemote.getPlayerApi();
-                        playerApi.getPlayerState().setResultCallback(new CallResult.ResultCallback<PlayerState>() {
-                            @Override
-                            public void onResult(PlayerState playerState) {
-                                playerStateCall = playerState;
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onFailure(Throwable throwable) {
-
-                    }
-                });
-    }
 
     public void forceUpdateSongDetails(final boolean wasRemoteUserRequest) {
         playerApi.getPlayerState()
@@ -172,7 +168,7 @@ public class PlayerUpdates {
 
     public void resetListeners(String userId) {
         FireBaseUtil.clearRemoteUserListener(userId);
-        connectedTo = null;
+        connectedToUser = null;
         firstCall = true;
     }
 
