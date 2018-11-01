@@ -27,26 +27,31 @@ public class FireBaseUtil {
 
 
     public static boolean doesUserExist;
-    static PlayerUpdates playerUpdates;
+    private static PlayerUpdates playerUpdates;
+    private static UserUpdates userUpdates;
     private static ChildEventListener listener;
+    private boolean userNameExists = false;
 
-    private static void addUserToDB(String userName, String id, String accName, String imageURL) {
-        FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
+    public void isUserNameAvailable(final Context context, final String userName){
+        userUpdates = new UserUpdates();
+        final DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference("userDetails");
+            rootRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    for (DataSnapshot dsp : dataSnapshot.getChildren()) {
+                        User user = dsp.getValue(User.class);
+                        doesUserExist=false;
+                        if (user != null && userName.equals(user.getUserName())) {
+                            System.out.println(user.getUserName() + userName);
+                            userNameExists = true;
+                        }
+                    }
+                    userUpdates.userNameExistanceActivityNotify(context, userNameExists);
+                }
+                @Override
+                public void onCancelled(DatabaseError databaseError) {}
+            });
 
-        Map<String, Object> uidMap = new HashMap<>();
-        Map<String, Object> user = new HashMap<>();
-        DatabaseReference myRef = mDatabase.getReference();
-        uidMap.put("userDetails", id);
-        user.put("id", id);
-        user.put("userName", userName);
-        user.put("accName", accName);
-        user.put("imageUrl", imageURL);
-        user.put("songPlayingStr", null);
-        user.put("songState", true);
-        user.put("songTime", 0);
-        user.put("requestedUpdate", false);
-        myRef.push().setValue(uidMap);
-        myRef.child("userDetails/" + id).updateChildren(user);
     }
 
     public static void doesUserExistByID(final String id, final String userName, final String display_name, final String imageURI) {
@@ -56,9 +61,8 @@ public class FireBaseUtil {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (!dataSnapshot.hasChild(id)) {
                         addUserToDB(userName, id, display_name, imageURI);
-                    }else if(!dataSnapshot.child(id).hasChild("userName")) {
+                    }else if(!dataSnapshot.child(id).hasChild(userName)) {
                     addUserToDB(userName, id, display_name, imageURI);
-                    System.out.println("hasnt got child..");
                 }
             }
 
@@ -68,12 +72,21 @@ public class FireBaseUtil {
         });
     }
 
-    //Needs UserID as reference, only thing that matters is songpos,songuri,isPaused?
-    //updates Songinfo to FIREBASE
+    private static void addUserToDB(String userName, String id, String accName, String imageURL) {
+        FirebaseDatabase mDatabase = FirebaseDatabase.getInstance();
+        Map<String, Object> user = new HashMap<>();
+        DatabaseReference myRef = mDatabase.getReference();
+        user.put("uid", id);
+        user.put("userName", userName);
+        user.put("accName", accName);
+        user.put("imageUrl", imageURL);
+        user.put("requestedUpdate", false);
+        myRef.child("userDetails").child(id).updateChildren(user);
+    }
+
     public static void updateFireBaseSongInfo(String userid, String uri, long songPosition, boolean songState, String songImageURI, boolean wasRemoteUserRequest) {
         final double initialTime = System.nanoTime();
         DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
-
         Map<String, Object> songDetails = new HashMap<>();
         songDetails.put("songPlayingStr", uri);
         songDetails.put("songState", songState);
@@ -121,7 +134,7 @@ public class FireBaseUtil {
         return myList;
     }
 
-    private static void remoteUserListener(final String URI) {
+    private static void subscribeToRemoteUserChanges(final String URI) {
         final DatabaseReference ref = FirebaseDatabase.getInstance().getReference("userDetails/" + URI);
         playerUpdates = PlayerUpdates.getInstance();
 
@@ -135,10 +148,12 @@ public class FireBaseUtil {
                 ref.addListenerForSingleValueEvent(new ValueEventListener() {
                     public void onDataChange(DataSnapshot parent) {
                         final User updatedUser = parent.getValue(User.class);
-                        if (!updatedUser.requestedUpdate) {
-                            playerUpdates.setPlayBack(updatedUser);
-                        } else if (playerUpdates.firstCall) {
-                            playerUpdates.setPlayBack(updatedUser);
+                        if (updatedUser != null) {
+                            if (!updatedUser.requestedUpdate) {
+                                playerUpdates.setPlayBack(updatedUser);
+                            } else if (playerUpdates.firstCall) {
+                                playerUpdates.setPlayBack(updatedUser);
+                            }
                         }
                     }
 
@@ -162,24 +177,24 @@ public class FireBaseUtil {
         });
     }
 
-    public static void subscribeToRemoteUserIfExists(final Context context, final String username) {
+    public static void getRemoteUserIfExists(final Context context, final String username) {
         final DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference("userDetails");
         playerUpdates = PlayerUpdates.getInstance();
+        userUpdates = new UserUpdates();
 
-        final UserUpdates userUpdates = new UserUpdates();
         rootRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot ds : dataSnapshot.getChildren()) {
                     if (ds.child("userName").getValue(String.class).toLowerCase().equals(username.toLowerCase())) {
-                        //This starts callback to start new activity, sets up remote user listener and forces remote user to update firebase details.
-                        doesUserExist = true;
+
                         DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("userDetails/" + ds.getKey());
+                        doesUserExist = true;
+                        subscribeToRemoteUserChanges(ds.getKey());
 
-                        remoteUserListener(ds.getKey());//Send UID to remote listener
-                        userUpdates.fireBaseUserNameCheckCallback(context);//send context to callback to start another activity
+                        userUpdates.dbUserExistsStartActivity(context);//send context to callback to start another activity
 
-                        playerUpdates.connectedTo = ds.getValue(User.class);//Set ConnectedToUser details in PlayerUpdates
+                        playerUpdates.connectedToUser = ds.getValue(User.class);
 
                         Map<String, Object> requestedUpdateBool = new HashMap<>();
                         requestedUpdateBool.put("requestedUpdate", true); //This lets other userapps know that it was a remote request and not a song change.
@@ -224,11 +239,9 @@ public class FireBaseUtil {
         });
     }
 
-    public static void clearRemoteUserListener(String userId) {
-        if (userId != null) {
-            final DatabaseReference ref = FirebaseDatabase.getInstance().getReference("userDetails/" + userId);//Need connectedUserURI
+    public static void clearRemoteUserListener(String URI) {
+        final DatabaseReference ref = FirebaseDatabase.getInstance().getReference("userDetails/" + URI);
             ref.removeEventListener(listener);
-        }
     }
 }
 
