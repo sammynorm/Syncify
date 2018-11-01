@@ -1,29 +1,15 @@
 package sammynorm.syncify.Model;
 
 public class User {
-    String uid;
-    String userName;
-    String accName;
-    String imageURL;
-    String songPlayingStr;
-    boolean songState;
-    long songTime;
-    String songImageURI;
+    private String uid;
+    private String userName;
+    private String accName;
+    private String imageURL;
+    private String songPlayingStr;
+    private boolean songState;
+    private long songTime;
+    private String songImageURI;
     boolean requestedUpdate;
-
-    @Override
-    public String toString() {
-        return "User{" +
-                "uid='" + uid + '\'' +
-                ", userName='" + userName + '\'' +
-                ", accName='" + accName + '\'' +
-                ", imageURL='" + imageURL + '\'' +
-                ", songPlayingStr='" + songPlayingStr + '\'' +
-                ", songState=" + songState +
-                ", songTime=" + songTime +
-                ", requestedUpdate=" + requestedUpdate +
-                '}';
-    }
 
     public User(String uid, String userName, String accName, String imageURL, String songPlayingStr, boolean songState, long songTime,String songImageURI, boolean requestedUpdate) {
         this.uid = uid;
@@ -37,16 +23,7 @@ public class User {
         this.requestedUpdate = requestedUpdate;
     }
 
-    public String getSongImageURI() {
-        return songImageURI;
-    }
-
-    public void setSongImageURI(String songImageURI) {
-        this.songImageURI = songImageURI;
-    }
-
     public User() {
-
     }
 
     public String getUid() {
@@ -101,6 +78,14 @@ public class User {
         return songTime;
     }
 
+    public String getSongImageURI() {
+        return songImageURI;
+    }
+
+    public void setSongImageURI(String songImageURI) {
+        this.songImageURI = songImageURI;
+    }
+
     public boolean isRequestedUpdate() {
         return requestedUpdate;
     }
@@ -108,6 +93,18 @@ public class User {
     public void setRequestedUpdate(boolean requestedUpdate) {
         this.requestedUpdate = requestedUpdate;
     }
-
+    @Override
+    public String toString() {
+        return "User{" +
+                "uid='" + uid + '\'' +
+                ", userName='" + userName + '\'' +
+                ", accName='" + accName + '\'' +
+                ", imageURL='" + imageURL + '\'' +
+                ", songPlayingStr='" + songPlayingStr + '\'' +
+                ", songState=" + songState +
+                ", songTime=" + songTime +
+                ", requestedUpdate=" + requestedUpdate +
+                '}';
+    }
 }
 
